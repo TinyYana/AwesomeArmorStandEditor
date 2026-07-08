@@ -48,10 +48,12 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
         if (event.clickedInventory !== event.inventory) return
 
         when (event.rawSlot) {
-            SLOT_ADD_STAND -> controller.addStand(player)
-            SLOT_ADD_ITEM -> controller.addDisplay(player, DisplayKind.ITEM, itemPayload(player))
-            SLOT_ADD_BLOCK -> controller.addDisplay(player, DisplayKind.BLOCK, "minecraft:stone")
-            SLOT_ADD_TEXT -> controller.addDisplay(player, DisplayKind.TEXT, texts.raw("display.default-text") ?: "文字")
+            // The GUI must enforce the same permissions the command path does — a button that calls
+            // the controller directly would otherwise bypass gated actions (e.g. disk-writing export).
+            SLOT_ADD_STAND -> guarded(player, "aase.create.armorstand") { controller.addStand(player) }
+            SLOT_ADD_ITEM -> guarded(player, "aase.create.display") { controller.addDisplay(player, DisplayKind.ITEM, itemPayload(player)) }
+            SLOT_ADD_BLOCK -> guarded(player, "aase.create.display") { controller.addDisplay(player, DisplayKind.BLOCK, "minecraft:stone") }
+            SLOT_ADD_TEXT -> guarded(player, "aase.create.display") { controller.addDisplay(player, DisplayKind.TEXT, texts.raw("display.default-text") ?: "文字") }
 
             SLOT_MODE_MOVE -> setMode(player, EditMode.MOVE)
             SLOT_MODE_POSE -> setMode(player, EditMode.POSE)
@@ -68,7 +70,7 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
             SLOT_NUDGE_DOWN -> controller.adjust(player, -1)
             SLOT_NUDGE_UP -> controller.adjust(player, 1)
 
-            SLOT_EQUIP -> texts.send(player, "equip.hint")
+            SLOT_EQUIP -> { plugin.equipmentMenu.open(player); return }
             SLOT_GUIDE -> {
                 player.closeInventory()
                 // Defer a tick so the book opens cleanly after the inventory closes.
@@ -76,8 +78,8 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
                 return
             }
             SLOT_PRESETS -> { plugin.gallery.open(player); return }
-            SLOT_SAVE -> controller.save(player)
-            SLOT_EXPORT -> controller.exportCommands(player)
+            SLOT_SAVE -> guarded(player, "aase.scene.save") { controller.save(player) }
+            SLOT_EXPORT -> guarded(player, "aase.export.command") { controller.exportCommands(player) }
             SLOT_DELETE -> controller.deleteSelected(player)
             SLOT_CLOSE -> { player.closeInventory(); return }
 
@@ -87,6 +89,10 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
         }
         // Repopulate in place so highlights/values refresh.
         populate(player, event.inventory)
+    }
+
+    private inline fun guarded(player: Player, permission: String, block: () -> Unit) {
+        if (player.hasPermission(permission)) block() else texts.send(player, "system.no-permission")
     }
 
     private fun setMode(player: Player, mode: EditMode) {
@@ -151,7 +157,8 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
 
         inv.setItem(SLOT_PRESETS, icon(Material.PAINTING, "panel.presets"))
         inv.setItem(SLOT_SAVE, icon(Material.WRITABLE_BOOK, "panel.save"))
-        inv.setItem(SLOT_EXPORT, icon(Material.COMMAND_BLOCK, "panel.export"))
+        // Export writes to the server folder — only show the button to those allowed to use it.
+        if (player.hasPermission("aase.export.command")) inv.setItem(SLOT_EXPORT, icon(Material.COMMAND_BLOCK, "panel.export"))
         inv.setItem(SLOT_DELETE, icon(Material.BARRIER, "panel.delete"))
         inv.setItem(SLOT_CLOSE, icon(Material.RED_STAINED_GLASS_PANE, "panel.close"))
     }

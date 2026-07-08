@@ -14,8 +14,13 @@ Spigot 相容性:編譯只用 Bukkit/Spigot API 面,Adventure 以 shade+relocate
 ## L1 已驗證(自動)
 
 - `./gradlew build` 通過:編譯 + shadowJar + 單元測試。
-- 單元測試 `EditorLogicTest`:場景 JSON round-trip、姿勢角度 wrap、四元數/縮放/平移運算。
+- 單元測試 `EditorLogicTest`:場景 JSON round-trip、姿勢角度 wrap、四元數/縮放/平移運算、**分享碼 round-trip + 惡意/損毀輸入回 null 不丟例外**。
 - 打包 jar 內 Adventure 已 relocate 到 `com/tinyyana/awesomeArmorStandEditor/libs/kyori`,原 `net/kyori` 無殘留。
+
+## L3 已驗證(本輪,2026-07-08)
+
+- Paper 26.2 `runServer` enable 成功:`AwesomeArmorStandEditor enabled` + `Done (25s)`,**零 Exception**;編輯過的 `plugin.yml`(新權限 `aase.preset.save`、`aase.export.command`/`preset.save` 改 `default: op`)正常解析。測試服已關、port 25565 已釋放。
+- 玩家端行為(裝備選單、分享/匯入、資訊、匯出/範本存檔的權限擋人)為 L4,需真人;步驟見下。
 
 ## L2–L4 手動測試
 
@@ -51,8 +56,9 @@ Spigot 相容性:編譯只用 Bukkit/Spigot API 面,Adventure 以 shade+relocate
 4. 拿工具:**右鍵點盔甲座**選取 → **左/右鍵**微調角度 → **滾輪**換步進 → **潛行+滾輪**換軸 → **潛行+左鍵**換模式(姿勢/移動)→ **潛行+右鍵**換部位。盔甲座姿勢應即時改變。
 5. `/aase` 開控制面板:點模式/部位/軸/微調/旗標(迷你、隱形、無底板、手臂…)按鈕,盔甲座應即時反映。
 6. Display:`/aase adddisplay block` → 出現方塊 Display;切到 SCALE/ROTATE 模式微調,應即時縮放/旋轉。`/aase adddisplay item`(副手拿物品先)、`/aase adddisplay text` + `/aase settext <內容>`。
-7. 裝備:副手拿頭盔 → `/aase setequip head` → 盔甲座戴上。
-8. `/aase save` → 「已儲存(共 N 個元件)」;檢查 `plugins/AwesomeArmorStandEditor/scenes/<uuid>/<id>.json`。
+7. 裝備(選單):選取盔甲座 → `/aase equip`(或面板「裝備」鍵)→ 開 27 格裝備選單。**把物品拿到游標上(點一下背包物品)→ 點頭盔/胸甲/…格子**,盔甲座立刻穿上;**空手(游標空)點格子=卸下**。全程你的物品不會被消耗或複製(游標物品保留)。也可 `/aase setequip head`(副手物品)舊路徑。
+8. `/aase info` → 聊天顯示場景資訊(元件數/盔甲座/Display/發射器/動畫/目前選取/存檔狀態)。
+9. `/aase save` → 「已儲存(共 N 個元件)」;檢查 `plugins/AwesomeArmorStandEditor/scenes/<uuid>/<id>.json`。
 9. `/aase close` → 作品保留在世界。走遠再回來 `/aase edit`(站在作品旁)→ 重新綁定既有作品繼續編輯(不應產生分身)。
 10. `/aase list` → 列出場景;`/aase load 測試` → 在腳下放一份新的。
 11. `/aase export command` → 聊天出現可點擊「複製 summon 指令」,同時存成 `exports/測試.txt`;把指令貼到遊戲執行,應重現作品(NBT 為最佳努力,若版本格式有變請回報)。
@@ -73,19 +79,33 @@ Spigot 相容性:編譯只用 Bukkit/Spigot API 面,Adventure 以 shade+relocate
 
 18. `/aase export function` → 匯出資料包到 `exports/<場景>/datapack/`(含 `pack.mcmeta`、`summon.mcfunction`、有動畫則含 `load/tick/frames/*`)。把資料夾丟進世界 `datapacks/`,`/reload`,`/function aase:summon`(有動畫再 `/function aase:load` 然後 `/function aase:tick`)。**最佳努力**:pack_format/function 資料夾名依版本可能要調。
 
+### 玩家視角(分享碼 P4)
+
+19. 有作品的玩家 `/aase share` → 聊天出現可點擊「複製分享碼」,複製到剪貼簿(一串 `AASE1:...`);沒有元件時回「還沒有任何元件」。
+20. 另一個玩家(或自己換地方)`/aase import <貼上的碼> [新名稱]` → 在腳下放置同一份作品,回「已匯入並放置 …」;匯入的作品 owner 變成匯入者、是新的 id(不影響原作者存檔)。
+21. 亂碼防護:`/aase import 隨便亂打` → 回「分享碼無效或已損毀」,不應有紅字例外。
+22. 上限防護:把 `limits.per-player` 調小 → 匯入元件數超過上限的碼 → 被擋(「元件太多」)。
+
+### 權限分界(本輪新增,管理員視角)
+
+23. 用**非 OP** 帳號:`/aase export command` / `/aase export function` / `/aase pose save x` 應回「你沒有權限」(這三個會寫伺服器檔案 / 改全服 `presets.yml`,預設 `op`)。
+24. 非 OP 開 `/aase` 控制面板:**匯出鍵應不顯示**;就算點到該格也不會匯出(GUI 有二次權限檢查,不能繞過指令權限)。
+25. 給該帳號 `aase.export.command` / `aase.preset.save`(LuckPerms)後,以上恢復可用。
+
 ### 驗收層級標記
 
 回報測試時標明做到哪層:L1 build / L2 deployed(enable 無錯)/ L3 runtime(指令有回應)/ L4 玩家端(姿勢/存讀/匯出真的可見可用)。
 
 ## 已實作範圍
 
-- **P1** 靜態編輯器、**P2** 粒子、**P3** 關鍵影格動畫 + mcfunction 匯出 都已實作(見上方測試步驟)。
-- **P4**(分享碼/匯入、對外 API 事件)未做;分享目前靠複製 `scenes/<owner>/<id>.json` 檔。
+- **P1** 靜態編輯器、**P2** 粒子、**P3** 關鍵影格動畫 + mcfunction 匯出、**P4** 分享碼/匯入 + 對外事件 API 都已實作(見上方測試步驟)。
+- 另有:裝備選單 GUI、`/aase info`、寫檔/共用資料的權限分界。
+- 仍待做:粒子/動畫的**視覺化編輯面板 / 時間軸 GUI**(目前走指令 + 範本庫)。
 
 ## 已知限制
 
 - summon / mcfunction 匯出:**NBT 格式已對 Paper 26.2 用 RCON `/summon` 實測**(Pose/旗標/裝備 ArmorItems+HandItems/transformation/item/block/brightness/glow 皆正確;自訂名與文字用 **SNBT** `CustomName:"..."` / `text:"..."`,不是舊的 JSON 字串)。仍為最佳努力:裝備只帶物品 id(不含附魔/自訂資料);方塊只帶方塊名(不含 blockstate 屬性);名稱/文字轉純文字(顏色不保留)。若未來版本再變,`SummonExporter` / `McFunctionExporter` 是集中修改點。
 - 動畫即時播放僅在編輯 session 內(播放中盔甲座逐 tick 有成本,故不常駐);要常駐播放請用匯出的 datapack。
-- 粒子發射器位置目前是玩家加入時的站位(offset),尚無視覺化搬移(可刪除重加);編輯只有 add/clear。
-- 裝備編輯用 `/aase setequip <欄位>`(副手物品),尚無拖放式裝備 GUI。
+- 粒子發射器位置目前是玩家加入時的站位(offset),尚無視覺化搬移(可刪除重加);編輯只有 add/clear。**效能**:每 tick 迴圈不再解析 PDC(生成/索引時解一次並快取解好的 `Particle`),marker 空時 ticker 早退。
+- 裝備 GUI 用「手持物品點格子」而非真拖放(刻意:全程 cancel 事件、只複製游標物品,確保玩家物品零消耗/零複製);`/aase setequip`(副手)舊路徑仍在。
 - 數量上限以記憶體計數,未載入區塊的既有元件不計入(不做世界掃描的取捨)。

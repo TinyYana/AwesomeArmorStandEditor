@@ -63,11 +63,11 @@ pages:
   - |-
     <dark_gray>⑤ 裝備與外觀
 
-    <black>副手拿好裝備:
-    <dark_blue>/aase setequip head
-    <gray>(head/chest/legs/
-     feet/mainhand/
-     offhand)
+    <dark_blue>/aase equip
+    <black>開裝備選單:
+    手持物品點格子
+    =裝上,空手點
+    =卸下(不消耗)
 
     <black>開關(隱形等):
     <dark_blue>/aase flag small
@@ -95,18 +95,29 @@ pages:
 
     <black>stop 停 · loop 循環
   - |-
-    <dark_gray>⑧ 存檔與匯出
+    <dark_gray>⑧ 存檔與分享
 
     <dark_blue>/aase save<black> 存檔
     <dark_blue>/aase load 名字<black> 放置
     <dark_blue>/aase list<black> 我的清單
-    <dark_blue>/aase edit<black> 編輯附近
+    <dark_blue>/aase info<black> 場景資訊
 
-    <black>匯出成:
+    <black>分享給別人:
+    <dark_blue>/aase share<black> 產生碼
+    <dark_blue>/aase import 碼<black> 匯入
+  - |-
+    <dark_gray>⑨ 匯出(建築師)
+
+    <black>下面兩個會寫檔
+    到伺服器,預設
+    只開放給管理員
+    /建築師:
+
     <dark_blue>/aase export command
     <dark_blue>/aase export function
+    <dark_blue>/aase pose save id
   - |-
-    <dark_gray>⑨ 小提醒
+    <dark_gray>⑩ 小提醒
 
     <black>· 只能改自己的
     · 會尊重領地保護

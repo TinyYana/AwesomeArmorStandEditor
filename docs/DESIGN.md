@@ -178,7 +178,14 @@ aase.limit.<n>           數量上限覆寫(取最大)
 - [ ] 雙視角測試教學寫入 `docs/TESTING.md`;L4 玩家端驗收。
 
 **已實作**:**P2** 粒子發射器(marker 實體 + 預算限流 ticker)、**P3** 關鍵影格時間軸(`Animation`/`Track`/`Keyframe` + `AnimationPlayer` 即時播放 + `McFunctionExporter` datapack 匯出)。
-**待做**:**P4** 分享碼/匯入 + 對外 API/事件;拖放式裝備 GUI;粒子/動畫的視覺化編輯面板(目前走指令)。
+**已實作(P4 + 易用/效能一輪)**:
+- **分享碼/匯入**:`store/ShareCode`(`AASE1:` + Base64url(gzip(JSON)),decode 有長度/解壓上限防護)+ `/aase share`(可點擊複製)/`/aase import <碼> [名稱]`(重設 owner+新 id,匯入受每人上限守門)。
+- **對外事件 API**:`api/AaseSceneSaveEvent`(通知)、`api/AaseScenePlaceEvent`(可取消,load/import 前擲)—— 讓別的外掛掛我們,零反向依賴。
+- **裝備 GUI**:`menu/EquipmentMenu`,手持物品點格子=裝上、空手點=卸下,**只複製游標物品、全程 cancel,不會消耗/複製玩家物品**;控制面板裝備鍵改開此選單。
+- **`/aase info`**:場景資訊(元件/發射器/動畫/選取/存檔狀態)。
+- **效能**:`ParticleService` 改為**每個 marker 只在生成/索引時解一次 PDC 字串 + 預解析 `Particle` 列舉並快取**,每 tick 迴圈零解析(只判 rate 與玩家距離);markers 空時整個 ticker 直接早退。
+- **權限姿態(2026-07-08 追加拍板)**:凡是**寫入伺服器檔案或改動全服共用資料**的動作預設不給一般玩家 —— `aase.export.command`(匯出寫 `plugins/`)、`aase.preset.save`(`/aase pose save` 改寫共用 `presets.yml`)改 `default: op`;**GUI 邊界同步強制權限**(控制面板匯出鍵會查權限、無權限則隱藏,避免點按繞過指令權限)。
+**待做**:粒子/動畫的**視覺化編輯面板 / 時間軸 GUI**(目前走指令 + 範本庫;結構已足夠,屬體驗加值)。
 
 ## 12. 純邏輯單元測試點
 

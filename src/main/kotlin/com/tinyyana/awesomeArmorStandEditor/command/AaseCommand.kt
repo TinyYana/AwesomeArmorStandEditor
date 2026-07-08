@@ -63,7 +63,15 @@ class AaseCommand(private val plugin: AwesomeArmorStandEditorPlugin) : TabExecut
             }
             "edit" -> require(sender, "aase.use") { controller.editFromTarget(sender) }
             "list" -> require(sender, "aase.use") { listScenes(sender) }
+            "info" -> require(sender, "aase.use") { controller.info(sender) }
+            "equip" -> require(sender, "aase.use") { plugin.equipmentMenu.open(sender) }
             "delete" -> require(sender, "aase.use") { controller.deleteSelected(sender) }
+            "share" -> require(sender, "aase.scene.share") { controller.shareCode(sender) }
+            "import" -> require(sender, "aase.scene.share") {
+                val code = args.getOrNull(1)
+                if (code == null) deny(sender, "usage.import")
+                else controller.importCode(sender, code, args.drop(2).joinToString(" ").ifBlank { null })
+            }
             "export" -> require(sender, "aase.export.command") {
                 when (args.getOrNull(1)?.lowercase()) {
                     "command" -> controller.exportCommands(sender)
@@ -93,13 +101,14 @@ class AaseCommand(private val plugin: AwesomeArmorStandEditorPlugin) : TabExecut
                 if (sender is Player) plugin.guideBook.open(sender) else texts.send(sender, "system.player-only")
             }
             "presets", "gallery" -> require(sender, "aase.use") { plugin.gallery.open(sender) }
-            "pose" -> require(sender, "aase.use") {
-                when (val a = args.getOrNull(1)?.lowercase()) {
-                    null -> deny(sender, "usage.pose")
-                    "save" -> args.getOrNull(2)?.let { controller.savePose(sender, it, args.drop(3).joinToString(" ").ifBlank { null }) }
+            "pose" -> when (val a = args.getOrNull(1)?.lowercase()) {
+                null -> require(sender, "aase.use") { deny(sender, "usage.pose") }
+                // Writing to the shared presets.yml is a builder/admin action, not for every player.
+                "save" -> require(sender, "aase.preset.save") {
+                    args.getOrNull(2)?.let { controller.savePose(sender, it, args.drop(3).joinToString(" ").ifBlank { null }) }
                         ?: deny(sender, "usage.pose")
-                    else -> controller.applyPose(sender, a)
                 }
+                else -> require(sender, "aase.use") { controller.applyPose(sender, a) }
             }
             "fx" -> require(sender, "aase.use") {
                 args.getOrNull(1)?.let { controller.applyFx(sender, it) } ?: deny(sender, "usage.fx")
@@ -156,7 +165,8 @@ class AaseCommand(private val plugin: AwesomeArmorStandEditorPlugin) : TabExecut
         texts.send(sender, "help.header")
         for (line in listOf(
             "help.new", "help.tool", "help.presets", "help.addstand", "help.adddisplay", "help.controls",
-            "help.save", "help.load", "help.edit", "help.list", "help.export", "help.close",
+            "help.equip", "help.save", "help.load", "help.edit", "help.list", "help.info",
+            "help.export", "help.share", "help.import", "help.close",
         )) if (texts.raw(line) != null) texts.send(sender, line)
     }
 
@@ -168,8 +178,8 @@ class AaseCommand(private val plugin: AwesomeArmorStandEditorPlugin) : TabExecut
 
     private val subcommands = listOf(
         "guide", "tool", "new", "presets", "pose", "fx", "mirror", "addstand", "adddisplay", "setblock", "settext",
-        "setitem", "setname", "setequip", "flag", "particle", "anim", "save", "load", "edit", "list", "delete",
-        "export", "close", "reload",
+        "setitem", "setname", "setequip", "equip", "flag", "particle", "anim", "save", "load", "edit", "list", "info",
+        "delete", "export", "share", "import", "close", "reload",
     )
 
     private val equipSlots = listOf("head", "chest", "legs", "feet", "mainhand", "offhand")

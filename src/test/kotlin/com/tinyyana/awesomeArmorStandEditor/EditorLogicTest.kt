@@ -23,6 +23,7 @@ import com.tinyyana.awesomeArmorStandEditor.model.Transform
 import com.tinyyana.awesomeArmorStandEditor.model.Vec3
 import com.tinyyana.awesomeArmorStandEditor.export.SummonExporter
 import com.tinyyana.awesomeArmorStandEditor.store.SceneCodec
+import com.tinyyana.awesomeArmorStandEditor.store.ShareCode
 import kotlin.math.PI
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -130,6 +131,22 @@ class EditorLogicTest {
 
         // Capture the real output so it can be run against a live server (build/ is gitignored).
         java.io.File("build/export-sample.txt").writeText(out)
+    }
+
+    @Test
+    fun shareCodeRoundTripsAndRejectsGarbage() {
+        val scene = Scene(id = "abc", owner = "00000000-0000-0000-0000-000000000009", name = "分享測試")
+        scene.elements += ArmorStandElement(localId = 1, offset = Vec3(0.5, 1.0, -0.5), customName = "<gold>招牌")
+        scene.emitters += ParticleEmitter(id = 1, particle = "FLAME", rateTicks = 5)
+
+        val code = ShareCode.encode(scene)
+        assertTrue(code.startsWith("AASE1:"), code)
+        assertEquals(scene, ShareCode.decode(code))
+
+        // Malformed / hostile input returns null instead of throwing into game logic.
+        assertEquals(null, ShareCode.decode("not-a-real-code"))
+        assertEquals(null, ShareCode.decode("AASE1:@@@ not base64 @@@"))
+        assertEquals(null, ShareCode.decode(""))
     }
 
     @Test

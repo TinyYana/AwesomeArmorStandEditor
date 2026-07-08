@@ -1,6 +1,8 @@
 package com.tinyyana.awesomeArmorStandEditor.edit
 
 import com.tinyyana.awesomeArmorStandEditor.AwesomeArmorStandEditorPlugin
+import com.tinyyana.awesomeArmorStandEditor.api.AaseScenePlaceEvent
+import com.tinyyana.awesomeArmorStandEditor.api.AaseSceneSaveEvent
 import com.tinyyana.awesomeArmorStandEditor.export.McFunctionExporter
 import com.tinyyana.awesomeArmorStandEditor.export.SummonExporter
 import com.tinyyana.awesomeArmorStandEditor.integration.LycoLibHook
@@ -17,11 +19,14 @@ import com.tinyyana.awesomeArmorStandEditor.model.Vec3
 import com.tinyyana.awesomeArmorStandEditor.session.EditMode
 import com.tinyyana.awesomeArmorStandEditor.session.EditSession
 import com.tinyyana.awesomeArmorStandEditor.store.ItemCodec
+import com.tinyyana.awesomeArmorStandEditor.store.ShareCode
 import net.kyori.adventure.text.event.ClickEvent
+import org.bukkit.Location
 import org.bukkit.Particle
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
 import java.io.File
 import java.util.Locale
 import java.util.UUID
@@ -187,6 +192,7 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
         plugin.store.save(s.scene)
         s.dirty = false
         LycoLibHook.audit(plugin.name, player.name, "scene.save", "name=${s.scene.name} elements=${s.scene.elements.size}")
+        plugin.server.pluginManager.callEvent(AaseSceneSaveEvent(player, s.scene))
         plugin.texts.send(player, "scene.saved", "name" to s.scene.name, "count" to s.scene.elements.size.toString())
     }
 
@@ -194,13 +200,18 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
     fun loadFresh(player: Player, name: String) {
         val scene = plugin.store.loadByName(player.uniqueId, name)
             ?: return plugin.texts.send(player, "scene.not-found", "name" to name)
+        val origin = player.location.clone()
+        if (!firePlace(player, scene, origin)) return plugin.texts.send(player, "share.place-cancelled")
         plugin.sessions.get(player.uniqueId)?.let { plugin.sessions.close(player.uniqueId) }
         val session = plugin.sessions.open(player.uniqueId, scene)
-        val origin = player.location.clone()
         plugin.placement.placeAll(session, origin, player.uniqueId)
         for (emitter in scene.emitters) plugin.particles.spawnEmitter(origin, scene.id, player.uniqueId, emitter)
         plugin.texts.send(player, "scene.loaded", "name" to name, "count" to scene.elements.size.toString())
     }
+
+    /** Fires the cancellable place event; returns false if a third-party plugin vetoed it. */
+    private fun firePlace(player: Player, scene: Scene, origin: Location): Boolean =
+        !AaseScenePlaceEvent(player, scene, origin).also { plugin.server.pluginManager.callEvent(it) }.isCancelled
 
     /** Re-bind a session to already-placed art the player is standing near (no duplicate spawn). */
     fun editFromTarget(player: Player) {
@@ -338,6 +349,104 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
     }
 
     private fun sanitize(name: String) = name.replace(Regex("[^A-Za-z0-9_\\-]"), "_").ifBlank { "scene" }
+
+    // --- share code / import (P4) ---
+
+    /** Emits a copy-pasteable share code for the current scene. */
+    fun shareCode(player: Player) = withSession(player) { s ->
+        if (s.scene.elements.isEmpty() && s.scene.emitters.isEmpty()) return@withSession plugin.texts.send(player, "export.empty")
+        val code = ShareCode.encode(s.scene)
+        val clickable = plugin.texts.component("share.click").clickEvent(ClickEvent.copyToClipboard(code))
+        plugin.texts.sendComponent(player, clickable)
+        plugin.texts.send(player, "share.hint")
+        LycoLibHook.audit(plugin.name, player.name, "scene.share", "name=${s.scene.name}")
+    }
+
+    /** Imports a share code as a new scene owned by the importer, placed at their feet. */
+    fun importCode(player: Player, code: String, name: String?) {
+        val decoded = ShareCode.decode(code)
+            ?: return plugin.texts.send(player, "share.import-bad")
+        if (!player.hasPermission("aase.bypass.limit") && decoded.elements.size > plugin.settings.limitPerPlayer) {
+            return plugin.texts.send(player, "share.import-too-big", "max" to plugin.settings.limitPerPlayer.toString())
+        }
+        // Re-own: fresh id + importer as owner + optional rename; everything else carried over.
+        val scene = decoded.copy(
+            id = UUID.randomUUID().toString(),
+            owner = player.uniqueId.toString(),
+            name = name ?: decoded.name,
+            lastAnchor = null,
+        )
+        val origin = player.location.clone()
+        if (!firePlace(player, scene, origin)) return plugin.texts.send(player, "share.place-cancelled")
+        plugin.sessions.get(player.uniqueId)?.let { plugin.sessions.close(player.uniqueId) }
+        val session = plugin.sessions.open(player.uniqueId, scene)
+        plugin.placement.placeAll(session, origin, player.uniqueId)
+        for (emitter in scene.emitters) plugin.particles.spawnEmitter(origin, scene.id, player.uniqueId, emitter)
+        session.dirty = true
+        LycoLibHook.audit(plugin.name, player.name, "scene.import", "name=${scene.name} elements=${scene.elements.size}")
+        plugin.texts.send(player, "share.imported", "name" to scene.name, "count" to scene.elements.size.toString())
+    }
+
+    // --- info ---
+
+    /** Chat summary of the current scene: counts, animation, selection, save state. */
+    fun info(player: Player) = withSession(player) { s ->
+        val sc = s.scene
+        plugin.texts.send(player, "info.header", "name" to sc.name)
+        plugin.texts.send(
+            player, "info.elements",
+            "count" to sc.elements.size.toString(),
+            "stands" to sc.elements.count { it is ArmorStandElement }.toString(),
+            "displays" to sc.elements.count { it is DisplayElement }.toString(),
+        )
+        plugin.texts.send(player, "info.emitters", "count" to sc.emitters.size.toString())
+        sc.animation?.let { a ->
+            plugin.texts.send(
+                player, "info.anim",
+                "len" to a.lengthTicks.toString(),
+                "tracks" to a.tracks.size.toString(),
+                "loop" to if (a.loop) "開" else "關",
+            )
+        }
+        s.selected()?.let { sel ->
+            plugin.texts.send(
+                player, "info.selected",
+                "id" to sel.localId.toString(),
+                "type" to if (sel is ArmorStandElement) "盔甲座" else "Display",
+            )
+        }
+        plugin.texts.send(player, "info.dirty", "state" to if (s.dirty) "有未儲存變更" else "已儲存")
+    }
+
+    // --- equipment menu accessors ---
+
+    /** Current equipment (slot -> item base64 or null) for the selected stand, or null if none selected. */
+    fun equipmentSnapshot(player: Player): Map<String, String?>? {
+        val el = plugin.sessions.get(player.uniqueId)?.selected() as? ArmorStandElement ?: return null
+        return linkedMapOf(
+            "head" to el.equipment.head, "chest" to el.equipment.chest, "legs" to el.equipment.legs,
+            "feet" to el.equipment.feet, "mainhand" to el.equipment.mainHand, "offhand" to el.equipment.offHand,
+        )
+    }
+
+    /** Sets one equipment slot from a given item (null clears it). Used by the equipment GUI. */
+    fun setEquipItem(player: Player, slot: String, item: ItemStack?): Boolean {
+        val s = plugin.sessions.get(player.uniqueId) ?: return false
+        val el = s.selected() as? ArmorStandElement ?: return false
+        val encoded = item?.takeIf { !it.type.isAir }?.let { ItemCodec.encode(it) }
+        when (slot) {
+            "head" -> el.equipment.head = encoded
+            "chest" -> el.equipment.chest = encoded
+            "legs" -> el.equipment.legs = encoded
+            "feet" -> el.equipment.feet = encoded
+            "mainhand" -> el.equipment.mainHand = encoded
+            "offhand" -> el.equipment.offHand = encoded
+            else -> return false
+        }
+        s.entities[el.localId]?.let { plugin.placement.apply(it, el) }
+        s.dirty = true
+        return true
+    }
 
     // --- particles (P2) ---
 

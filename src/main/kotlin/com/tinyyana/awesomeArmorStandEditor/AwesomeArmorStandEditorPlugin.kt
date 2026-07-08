@@ -9,6 +9,7 @@ import com.tinyyana.awesomeArmorStandEditor.integration.LycoLibHook
 import com.tinyyana.awesomeArmorStandEditor.listener.ChunkIndexListener
 import com.tinyyana.awesomeArmorStandEditor.listener.EntityProtectionListener
 import com.tinyyana.awesomeArmorStandEditor.menu.ControlPanel
+import com.tinyyana.awesomeArmorStandEditor.menu.EquipmentMenu
 import com.tinyyana.awesomeArmorStandEditor.menu.GuideBook
 import com.tinyyana.awesomeArmorStandEditor.menu.PresetGallery
 import com.tinyyana.awesomeArmorStandEditor.particle.ParticleService
@@ -35,6 +36,7 @@ class AwesomeArmorStandEditorPlugin : JavaPlugin() {
     lateinit var controller: EditorController; private set
     lateinit var panel: ControlPanel; private set
     lateinit var gallery: PresetGallery; private set
+    lateinit var equipmentMenu: EquipmentMenu; private set
     lateinit var guideBook: GuideBook; private set
     lateinit var particles: ParticleService; private set
     lateinit var animation: AnimationPlayer; private set
@@ -57,6 +59,7 @@ class AwesomeArmorStandEditorPlugin : JavaPlugin() {
         controller = EditorController(this)
         panel = ControlPanel(this)
         gallery = PresetGallery(this)
+        equipmentMenu = EquipmentMenu(this)
         guideBook = GuideBook(this).also { it.reload() }
         particles = ParticleService(this, keys)
         animation = AnimationPlayer(this)
@@ -77,6 +80,7 @@ class AwesomeArmorStandEditorPlugin : JavaPlugin() {
             registerEvents(ChunkIndexListener(this@AwesomeArmorStandEditorPlugin), this@AwesomeArmorStandEditorPlugin)
             registerEvents(panel, this@AwesomeArmorStandEditorPlugin)
             registerEvents(gallery, this@AwesomeArmorStandEditorPlugin)
+            registerEvents(equipmentMenu, this@AwesomeArmorStandEditorPlugin)
         }
 
         logger.info("AwesomeArmorStandEditor enabled (standalone, Spigot/Paper compatible).")

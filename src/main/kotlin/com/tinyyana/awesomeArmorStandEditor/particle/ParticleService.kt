@@ -12,15 +12,23 @@ import org.bukkit.entity.Entity
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.scheduler.BukkitTask
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Particle emitters are invisible marker entities carrying their params in PDC, so they persist with
  * the placed art. A single global ticker emits only for markers in loaded chunks with a player in
  * range, and stops at a per-tick budget. No world scan — markers are indexed as chunks load.
+ *
+ * Perf: the PDC string is decoded and the [Particle] enum + dust options resolved exactly once (at
+ * spawn/index time) and cached per marker. The per-tick loop then does no parsing at all — it only
+ * checks the rate and player range — so a scene full of emitters stays cheap on the main thread.
  */
 class ParticleService(private val plugin: AwesomeArmorStandEditorPlugin, private val keys: AaseKeys) {
 
-    private val markers = java.util.concurrent.ConcurrentHashMap.newKeySet<Entity>()
+    /** Decoded emitter + pre-resolved particle handle, so the hot loop never parses. */
+    private class Cached(val emitter: ParticleEmitter, val particle: Particle?, val dust: Particle.DustOptions?)
+
+    private val markers = ConcurrentHashMap<Entity, Cached>()
     private var tick = 0L
     private var task: BukkitTask? = null
 
@@ -44,12 +52,16 @@ class ParticleService(private val plugin: AwesomeArmorStandEditorPlugin, private
         pdc.set(keys.scene, PersistentDataType.STRING, sceneId)
         pdc.set(keys.local, PersistentDataType.INTEGER, emitter.id)
         pdc.set(keys.emitter, PersistentDataType.STRING, encode(emitter))
-        markers.add(marker)
+        markers[marker] = build(emitter)
         return marker
     }
 
     fun indexChunk(chunk: Chunk) {
-        for (e in chunk.entities) if (e.persistentDataContainer.has(keys.emitter, PersistentDataType.STRING)) markers.add(e)
+        for (e in chunk.entities) {
+            if (markers.containsKey(e)) continue
+            val data = e.persistentDataContainer.get(keys.emitter, PersistentDataType.STRING) ?: continue
+            decode(data)?.let { markers[e] = build(it) }
+        }
     }
 
     /** One-time startup index of emitter markers in currently-loaded chunks. */
@@ -58,7 +70,7 @@ class ParticleService(private val plugin: AwesomeArmorStandEditorPlugin, private
     }
 
     fun removeForScene(sceneId: String) {
-        val it = markers.iterator()
+        val it = markers.keys.iterator()
         while (it.hasNext()) {
             val e = it.next()
             if (e.persistentDataContainer.get(keys.scene, PersistentDataType.STRING) == sceneId) {
@@ -68,35 +80,45 @@ class ParticleService(private val plugin: AwesomeArmorStandEditorPlugin, private
     }
 
     private fun run() {
+        if (markers.isEmpty()) return
         tick++
         var budget = plugin.settings.particleBudget
         val range = plugin.settings.particleRange.toDouble()
         val rangeSq = range * range
-        val it = markers.iterator()
+        val it = markers.entries.iterator()
         while (it.hasNext()) {
-            val marker = it.next()
+            val entry = it.next()
+            val marker = entry.key
             if (!marker.isValid) { it.remove(); continue }
-            val data = marker.persistentDataContainer.get(keys.emitter, PersistentDataType.STRING) ?: continue
-            val e = decode(data) ?: continue
-            if (e.rateTicks <= 0 || tick % e.rateTicks != 0L) continue
+            val cached = entry.value
+            val e = cached.emitter
+            if (cached.particle == null || e.rateTicks <= 0 || tick % e.rateTicks != 0L) continue
             val loc = marker.location
-            if (loc.world?.players?.none { it.location.distanceSquared(loc) <= rangeSq } != false) continue
-            emit(loc, e)
+            if (loc.world?.players?.none { p -> p.location.distanceSquared(loc) <= rangeSq } != false) continue
+            emit(loc, cached)
             if (--budget <= 0) break
         }
     }
 
-    private fun emit(loc: Location, e: ParticleEmitter) {
+    private fun emit(loc: Location, c: Cached) {
         val world = loc.world ?: return
+        val particle = c.particle ?: return
+        val e = c.emitter
         runCatching {
-            val particle = Particle.valueOf(e.particle.uppercase())
-            if (particle.dataType == Particle.DustOptions::class.java) {
-                val dust = Particle.DustOptions(Color.fromRGB(e.dustColor and 0xFFFFFF), 1.0f)
-                world.spawnParticle(particle, loc, e.count, e.spread.x, e.spread.y, e.spread.z, e.speed, dust)
+            if (c.dust != null) {
+                world.spawnParticle(particle, loc, e.count, e.spread.x, e.spread.y, e.spread.z, e.speed, c.dust)
             } else {
                 world.spawnParticle(particle, loc, e.count, e.spread.x, e.spread.y, e.spread.z, e.speed)
             }
         }
+    }
+
+    private fun build(e: ParticleEmitter): Cached {
+        val particle = runCatching { Particle.valueOf(e.particle.uppercase()) }.getOrNull()
+        val dust = if (particle?.dataType == Particle.DustOptions::class.java) {
+            Particle.DustOptions(Color.fromRGB(e.dustColor and 0xFFFFFF), 1.0f)
+        } else null
+        return Cached(e, particle, dust)
     }
 
     private fun encode(e: ParticleEmitter): String =

@@ -35,14 +35,19 @@ permissions:
     description: 放置 Display 元件
     default: true
   aase.scene.save:
-    description: 儲存場景
+    description: 儲存場景(存到自己的存檔資料夾)
     default: true
   aase.scene.share:
-    description: 匯出 / 匯入分享
+    description: 產生 / 匯入分享碼(不落地伺服器檔案)
     default: true
   aase.export.command:
-    description: 匯出 summon 指令
-    default: true
+    # 會把 summon 指令 / mcfunction 資料包寫進伺服器的 plugins 資料夾,預設只給管理員/建築師
+    description: 匯出 summon 指令 / mcfunction 資料包(寫入伺服器檔案)
+    default: op
+  aase.preset.save:
+    # /aase pose save 會改寫全服共用的 presets.yml,預設只給管理員/建築師
+    description: 把姿勢存進全服共用的範本庫(presets.yml)
+    default: op
   aase.animate:
     description: 使用關鍵影格動畫(P3)
     default: true

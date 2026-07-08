@@ -21,6 +21,7 @@ usage:
   export: "<gray>用法:<aqua>/aase export <command|function>"
   pose: "<gray>用法:<aqua>/aase pose <範本id></aqua> 套用,或 <aqua>/aase pose save <id> [名稱]</aqua> 存成自己的範本"
   fx: "<gray>用法:<aqua>/aase fx <特效id></aqua>(用 <aqua>/aase presets</aqua> 看清單)"
+  import: "<gray>用法:<aqua>/aase import <分享碼> [新名稱]</aqua>(分享碼用 <aqua>/aase share</aqua> 產生)"
 
 session:
   none: "<red>你還沒有進行中的場景,先用 <aqua>/aase new <名稱></aqua> 開始"
@@ -72,6 +73,20 @@ equip:
   set: "<green>已更新 <white>{slot}</white> 裝備(以副手物品為準)"
   hint: "<yellow>把物品拿在副手,執行 <aqua>/aase setequip <head|chest|legs|feet|mainhand|offhand>"
 
+equip-menu:
+  title: "裝備 · 手持物品點格子裝上"
+  only-stand: "<red>先右鍵選一個盔甲座,才能開裝備選單"
+  info: "<gold>手持物品點格子=裝上 · 空手點=卸下(不會消耗你的物品)"
+  head: "<white>頭盔"
+  chest: "<white>胸甲"
+  legs: "<white>護腿"
+  feet: "<white>靴子"
+  mainhand: "<white>主手"
+  offhand: "<white>副手"
+  empty-hint: "<gray>手持物品點這裡裝上"
+  filled-hint: "<gray>手持物品=更換 · 空手=卸下"
+  back: "<yellow>← 回控制面板"
+
 flag:
   only-stand: "<red>只有盔甲座能切換這些開關"
   toggled: "<green>已切換 <white>{flag}"
@@ -81,6 +96,22 @@ export:
   click: "<yellow>[點擊複製 summon 指令到剪貼簿]"
   saved: "<gray>也已存成檔案:<white>{path}"
   mcfunction-saved: "<green>已匯出 mcfunction 資料包到 <white>{path}"
+
+share:
+  click: "<yellow>[點擊複製分享碼到剪貼簿]"
+  hint: "<gray>把這串碼給別人,他們用 <aqua>/aase import <碼></aqua> 就能拿到同一份作品"
+  import-bad: "<red>分享碼無效或已損毀,請確認完整複製"
+  import-too-big: "<red>這份作品的元件太多(超過你的上限 {max}),無法匯入"
+  imported: "<green>已匯入並放置 <white>{name}</white>(共 {count} 個元件),記得 <aqua>/aase save</aqua> 存起來"
+  place-cancelled: "<red>這裡不允許放置作品"
+
+info:
+  header: "<gold>◆ 場景資訊:<white>{name}"
+  elements: "<gray>元件 <white>{count}</white>(盔甲座 {stands} · Display {displays})"
+  emitters: "<gray>粒子發射器 <white>{count}"
+  anim: "<gray>動畫 <white>{len}</white> tick · {tracks} 軌 · 循環 {loop}"
+  selected: "<gray>目前選取 <white>#{id}</white>({type})"
+  dirty: "<gray>狀態:<white>{state}"
 
 particle:
   invalid: "<red>未知的粒子類型 <white>{type}</white>(用 tab 補全看可用清單)"
@@ -143,11 +174,15 @@ help:
   addstand: "<aqua>/aase addstand <gray>新增一個盔甲座"
   adddisplay: "<aqua>/aase adddisplay <item|block|text> <gray>新增 Display"
   controls: "<gray>工具:左右鍵微調、滾輪換步進、潛行+滾輪換軸、潛行+左鍵換模式"
+  equip: "<aqua>/aase equip <gray>開裝備選單(手持物品點格子裝上)"
   save: "<aqua>/aase save <gray>儲存目前場景"
   load: "<aqua>/aase load <名稱> <gray>在你腳下放置一份"
   edit: "<aqua>/aase edit <gray>綁定並編輯附近既有作品"
   list: "<aqua>/aase list <gray>列出你的場景"
+  info: "<aqua>/aase info <gray>顯示目前場景資訊"
   export: "<aqua>/aase export command <gray>匯出 summon 指令"
+  share: "<aqua>/aase share <gray>產生分享碼(可複製給別人)"
+  import: "<aqua>/aase import <碼> [名稱] <gray>匯入別人的分享碼"
   close: "<aqua>/aase close <gray>結束編輯(作品保留)"
 
 panel:
@@ -182,7 +217,7 @@ panel:
   flag-arms: "<white>手臂"
   flag-marker: "<white>標記(無碰撞)"
   flag-glowing: "<white>發光"
-  equip: "<yellow>裝備(副手物品 + /aase setequip)"
+  equip: "<yellow>裝備(點開選單:手持物品點格子裝上)"
   presets: "<gold>✦ 範本庫(不會擺?點這裡)"
   guide: "<gold>📖 使用手冊"
   save: "<green>儲存"
