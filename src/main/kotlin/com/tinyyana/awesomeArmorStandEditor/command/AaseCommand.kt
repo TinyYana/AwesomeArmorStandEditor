@@ -89,6 +89,9 @@ class AaseCommand(private val plugin: AwesomeArmorStandEditorPlugin) : TabExecut
                     else -> deny(sender, "usage.anim")
                 }
             }
+            "guide" -> require(sender, "aase.use") {
+                if (sender is Player) plugin.guideBook.open(sender) else texts.send(sender, "system.player-only")
+            }
             "presets", "gallery" -> require(sender, "aase.use") { plugin.gallery.open(sender) }
             "pose" -> require(sender, "aase.use") {
                 when (val a = args.getOrNull(1)?.lowercase()) {
@@ -143,12 +146,18 @@ class AaseCommand(private val plugin: AwesomeArmorStandEditorPlugin) : TabExecut
         for (s in scenes) texts.send(player, "list.entry", "name" to s.name, "count" to s.elements.size.toString())
     }
 
-    private fun help(player: CommandSender) {
-        texts.send(player, "help.header")
+    private fun help(sender: CommandSender) {
+        // Players get the full flip-through book; console gets the quick chat list.
+        if (sender is Player) {
+            plugin.guideBook.open(sender)
+            texts.send(sender, "help.opened-book")
+            return
+        }
+        texts.send(sender, "help.header")
         for (line in listOf(
             "help.new", "help.tool", "help.presets", "help.addstand", "help.adddisplay", "help.controls",
             "help.save", "help.load", "help.edit", "help.list", "help.export", "help.close",
-        )) if (texts.raw(line) != null) texts.send(player, line)
+        )) if (texts.raw(line) != null) texts.send(sender, line)
     }
 
     private inline fun require(sender: CommandSender, permission: String, block: () -> Unit) {
@@ -158,7 +167,7 @@ class AaseCommand(private val plugin: AwesomeArmorStandEditorPlugin) : TabExecut
     private fun deny(sender: CommandSender, usageKey: String) = texts.send(sender, usageKey)
 
     private val subcommands = listOf(
-        "tool", "new", "presets", "pose", "fx", "mirror", "addstand", "adddisplay", "setblock", "settext",
+        "guide", "tool", "new", "presets", "pose", "fx", "mirror", "addstand", "adddisplay", "setblock", "settext",
         "setitem", "setname", "setequip", "flag", "particle", "anim", "save", "load", "edit", "list", "delete",
         "export", "close", "reload",
     )

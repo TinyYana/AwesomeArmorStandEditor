@@ -131,8 +131,12 @@ list:
   header: "<gold>你的場景(共 {count} 個)"
   entry: "<gray>· <white>{name} <dark_gray>({count} 元件)"
 
+guide:
+  book-title: "盔甲座編輯器 手冊"
+
 help:
   header: "<gold>AwesomeArmorStandEditor 指令"
+  opened-book: "<gray>已打開使用手冊 —— 翻頁看各功能;隨時 <aqua>/aase guide</aqua> 再叫出來"
   tool: "<aqua>/aase tool <gray>取得編輯工具"
   presets: "<aqua>/aase presets <gray>範本庫:不會擺?選一個姿勢/特效點一下就好"
   new: "<aqua>/aase new <名稱> <gray>開始新場景"
@@ -180,6 +184,7 @@ panel:
   flag-glowing: "<white>發光"
   equip: "<yellow>裝備(副手物品 + /aase setequip)"
   presets: "<gold>✦ 範本庫(不會擺?點這裡)"
+  guide: "<gold>📖 使用手冊"
   save: "<green>儲存"
   export: "<aqua>匯出 summon 指令"
   delete: "<red>刪除選取元件"

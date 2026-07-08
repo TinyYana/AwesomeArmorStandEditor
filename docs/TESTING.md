@@ -29,6 +29,10 @@ Spigot 相容性:編譯只用 Bukkit/Spigot API 面,Adventure 以 shade+relocate
 4. 領地:在 GriefPrevention/WorldGuard 別人的領地內 `/aase addstand` 應被擋(「這裡受保護」);`region.event-probe: false` 則不擋。
 5. 效能:反覆放置/編輯時開 Spark 或 `/tps`,確認無掉 TPS(不應有 chunk 掃描)。
 
+### 玩家視角(遊戲內手冊)
+
+0. `/aase guide`(或 `/aase help`、或面板右上角📖)→ 打開一本可翻頁的書,10 頁涵蓋:最快上手、開始、範本庫、工具微調、控制面板、裝備外觀、粒子、動畫、存檔匯出、小提醒。翻頁確認文字在紙底色上看得清楚(深色)。完整版看 `docs/MANUAL.md`。
+
 ### 玩家視角(零基礎最快路徑 — 範本庫)
 
 給不會擺姿勢的人:

@@ -9,6 +9,7 @@ import com.tinyyana.awesomeArmorStandEditor.integration.LycoLibHook
 import com.tinyyana.awesomeArmorStandEditor.listener.ChunkIndexListener
 import com.tinyyana.awesomeArmorStandEditor.listener.EntityProtectionListener
 import com.tinyyana.awesomeArmorStandEditor.menu.ControlPanel
+import com.tinyyana.awesomeArmorStandEditor.menu.GuideBook
 import com.tinyyana.awesomeArmorStandEditor.menu.PresetGallery
 import com.tinyyana.awesomeArmorStandEditor.particle.ParticleService
 import com.tinyyana.awesomeArmorStandEditor.placement.EntityRegistry
@@ -34,6 +35,7 @@ class AwesomeArmorStandEditorPlugin : JavaPlugin() {
     lateinit var controller: EditorController; private set
     lateinit var panel: ControlPanel; private set
     lateinit var gallery: PresetGallery; private set
+    lateinit var guideBook: GuideBook; private set
     lateinit var particles: ParticleService; private set
     lateinit var animation: AnimationPlayer; private set
     lateinit var presets: PresetLibrary; private set
@@ -55,6 +57,7 @@ class AwesomeArmorStandEditorPlugin : JavaPlugin() {
         controller = EditorController(this)
         panel = ControlPanel(this)
         gallery = PresetGallery(this)
+        guideBook = GuideBook(this).also { it.reload() }
         particles = ParticleService(this, keys)
         animation = AnimationPlayer(this)
         LycoLibHook.init(server.pluginManager)
@@ -91,6 +94,7 @@ class AwesomeArmorStandEditorPlugin : JavaPlugin() {
         guard = buildGuard()
         texts.reload(this)
         presets.reload(this)
+        guideBook.reload()
     }
 
     private fun buildGuard(): RegionGuard = if (settings.regionEventProbe) EventProbeGuard() else PermissiveGuard

@@ -69,6 +69,12 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
             SLOT_NUDGE_UP -> controller.adjust(player, 1)
 
             SLOT_EQUIP -> texts.send(player, "equip.hint")
+            SLOT_GUIDE -> {
+                player.closeInventory()
+                // Defer a tick so the book opens cleanly after the inventory closes.
+                plugin.server.scheduler.runTask(plugin, Runnable { plugin.guideBook.open(player) })
+                return
+            }
             SLOT_PRESETS -> { plugin.gallery.open(player); return }
             SLOT_SAVE -> controller.save(player)
             SLOT_EXPORT -> controller.exportCommands(player)
@@ -109,6 +115,7 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
         inv.setItem(SLOT_INFO, icon(Material.NAME_TAG, "panel.info",
             "name" to (session?.scene?.name ?: "-"),
             "sel" to (selected?.let { "#${it.localId}" } ?: "-")))
+        inv.setItem(SLOT_GUIDE, icon(Material.WRITTEN_BOOK, "panel.guide"))
 
         inv.setItem(SLOT_ADD_STAND, icon(Material.ARMOR_STAND, "panel.add-stand"))
         inv.setItem(SLOT_ADD_ITEM, icon(Material.ITEM_FRAME, "panel.add-item"))
@@ -185,6 +192,7 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
 
     companion object {
         private const val SLOT_INFO = 0
+        private const val SLOT_GUIDE = 8
         private const val SLOT_ADD_STAND = 2
         private const val SLOT_ADD_ITEM = 3
         private const val SLOT_ADD_BLOCK = 4

@@ -1,0 +1,340 @@
+# AwesomeArmorStandEditor 使用說明手冊
+
+> 巨詳細版。遊戲內有精簡的翻頁書(`/aase guide`);這份是完整參考。
+> 目標讀者:從「完全不會擺姿勢」到「想做動畫、想匯出資料包」的所有人。
+
+---
+
+## 目錄
+
+1. [這是什麼](#1-這是什麼)
+2. [安裝](#2-安裝)
+3. [先懂三個概念](#3-先懂三個概念)
+4. [五分鐘上手(不用會美術)](#4-五分鐘上手不用會美術)
+5. [完整工作流程](#5-完整工作流程)
+6. [編輯工具詳解](#6-編輯工具詳解)
+7. [控制面板 GUI](#7-控制面板-gui)
+8. [範本庫:姿勢 / 特效 / 鏡像 / 自存](#8-範本庫)
+9. [盔甲座:姿勢 · 裝備 · 開關](#9-盔甲座)
+10. [Display 元件:物品 / 方塊 / 文字](#10-display-元件)
+11. [粒子特效](#11-粒子特效)
+12. [動畫(關鍵影格)— 重點章節](#12-動畫關鍵影格)
+13. [存檔 · 讀取 · 分享 · 編輯既有作品](#13-存檔讀取分享編輯既有作品)
+14. [匯出:指令 / mcfunction 資料包](#14-匯出)
+15. [指令總表](#15-指令總表)
+16. [權限總表](#16-權限總表)
+17. [設定檔](#17-設定檔)
+18. [疑難排解 FAQ](#18-疑難排解-faq)
+19. [效能與安全設計](#19-效能與安全設計)
+20. [路線圖:往「完整動畫工具」長](#20-路線圖)
+
+---
+
+## 1. 這是什麼
+
+一個讓生存 / 創造玩家自由自訂盔甲座與 Display 實體的場景編輯器。你可以:
+
+- 擺盔甲座姿勢、穿裝備、開關(隱形、無底板、發光…)
+- 放 Display 實體(物品 / 方塊 / 文字),自由縮放、旋轉、傾斜(盔甲座做不到的自由度)
+- 掛粒子特效
+- 用關鍵影格做動畫,並即時預覽播放
+- 存檔、分享、放置多份、綁定既有作品繼續編輯
+- 匯出成 `/summon` 指令或 mcfunction 資料包
+
+它是**獨立、可開源、跨 Spigot/Paper** 的插件,不需要安裝任何其他外掛。
+
+## 2. 安裝
+
+把 `AwesomeArmorStandEditor-<版本>.jar` 放進伺服器 `plugins/`,重啟。第一次啟動會產生:
+
+```
+plugins/AwesomeArmorStandEditor/
+  config.yml      行為/效能設定
+  messages.yml    所有玩家可見文字(可翻譯)
+  presets.yml     姿勢與特效範本(可自由增改)
+  guide.yml       遊戲內手冊頁面
+  scenes/         你的存檔(每人一個資料夾)
+  exports/        匯出的指令/資料包
+```
+
+改完設定用 `/aase reload`(不用重啟)。
+
+## 3. 先懂三個概念
+
+| 概念 | 意思 |
+|---|---|
+| **場景(Scene)** | 一份作品 = 一個存檔。裡面有很多元件 + 粒子 + 動畫。 |
+| **元件(Element)** | 場景裡的一個節點:一個盔甲座,或一個 Display。每個有編號 `#1 #2…`。 |
+| **藍圖 vs 世界實體** | 存檔是「藍圖」;世界裡看到的是藍圖的一次「放置」。刪掉世界裡的實體不會刪存檔;同一份存檔可以放很多份到不同地方。 |
+
+還有兩個規則要記得:
+
+- **擁有權**:每個元件記著是誰做的。你只能編輯自己的;別人打不壞、拿不走你的作品。
+- **會留在世界**:放好的作品是真的實體,會一直在(像真的盔甲座)。要繼續編輯用 `/aase edit` 站旁邊重新綁定,不會產生分身。
+
+## 4. 五分鐘上手(不用會美術)
+
+```
+/aase new 我的作品      ← 開一個新場景
+/aase addstand          ← 生一個盔甲座在你腳下
+右鍵點那個盔甲座          ← 選取它(先選才能改)
+/aase presets           ← 打開圖形範本庫
+  → 點上排的「揮手 / 萬歲 / 坐姿…」→ 盔甲座立刻變那樣
+  → 點「鏡像」讓左右對稱
+  → 點下排的「火焰光環 / 愛心 / 櫻花」→ 直接加粒子
+/aase save              ← 存檔
+```
+
+**完全不會看到任何角度數字。** 這就是給「美術細胞為 0」的人準備的路徑。
+擺到滿意的姿勢還能 `/aase pose save 我的招牌` 存成自己的範本,以後 `/aase pose 我的招牌` 一鍵叫回來。
+
+## 5. 完整工作流程
+
+1. `/aase new <名稱>` 開場景(把你現在站的位置當作品原點)。
+2. `/aase tool` 拿編輯工具。
+3. 加元件:`/aase addstand` 或 `/aase adddisplay item|block|text`。
+4. 選元件:拿工具**右鍵點**它。
+5. 調整:用範本(`/aase presets`)或工具微調或控制面板(`/aase`)。
+6. (可選)加粒子:`/aase particle add <類型>` 或範本庫特效。
+7. (可選)做動畫:見 §12。
+8. `/aase save` 存檔。
+9. 之後 `/aase load <名稱>` 放置一份、`/aase edit` 站旁邊接續編輯、`/aase export …` 匯出。
+
+## 6. 編輯工具詳解
+
+`/aase tool` 給你一支工具(預設烈焰棒,可在 config 改)。有進行中的場景時,拿著它:
+
+| 操作 | 作用 |
+|---|---|
+| **右鍵點元件** | 選取那個元件 |
+| **左鍵**(對空氣/方塊) | 目前軸 **−** 一個步進 |
+| **右鍵**(對空氣/方塊) | 目前軸 **+** 一個步進 |
+| **滾輪** | 切換步進大小(1° / 15° / 45° 之類) |
+| **潛行 + 滾輪** | 切換軸 X / Y / Z |
+| **潛行 + 左鍵** | 切換模式(姿勢 / 移動 / 平移 / 旋轉 / 縮放) |
+| **潛行 + 右鍵** | 切換部位(頭 / 身 / 左右臂 / 左右腿,盔甲座姿勢用) |
+
+畫面下方(actionbar)會即時顯示:`盔甲座#1 | 姿勢頭 | 軸 Y | 步進 15° | Y=+45°`。
+
+> 小提醒:有場景在編輯時,滾輪被拿去當「換步進/換軸」。想正常換物品欄,先 `/aase close` 結束編輯,或把工具丟掉。
+
+**模式說明**:
+
+- **姿勢(POSE)**:只有盔甲座有。旋轉某個身體部位。
+- **移動(MOVE)**:兩種元件都有。把整個元件沿軸平移。
+- **平移 / 旋轉 / 縮放(TRANSLATE / ROTATE / SCALE)**:只有 Display 有,改它的內部變換。
+
+## 7. 控制面板 GUI
+
+`/aase` 打開控制面板。不想背指令的話,這裡幾乎所有事都能點:
+
+- **上排**:資訊、右上角📖手冊、新增盔甲座 / 物品 / 方塊 / 文字 Display
+- **模式列**:移動 / 姿勢 / 平移 / 旋轉 / 縮放(目前選中的會標記)
+- **部位列**:頭 / 身 / 左右臂 / 左右腿
+- **軸 + 微調列**:X / Y / Z、步進 −/+、微調 −/+
+- **旗標列**:迷你 / 隱形 / 無底板 / 無重力 / 手臂 / 標記 / 發光、裝備提示
+- **底排**:✦範本庫、儲存、匯出、刪除、關閉
+
+## 8. 範本庫
+
+`/aase presets`(或面板底排「範本庫」)打開圖形範本庫。
+
+- **上排 = 姿勢範本**:點一下套到「目前選取的盔甲座」。內建:立正、T 字、萬歲、揮手、指向、沉思、坐姿、跑步。
+- **下排 = 特效範本**:點一下把一組調好的粒子加到選取元件(或你的位置)。內建:火焰光環、愛心、櫻花、星塵、靈魂之焰。
+- **鏡像鍵**:把左手/左腿的角度鏡射到右邊,一鍵對稱(非美術最容易弄歪的地方)。
+
+**指令版**:`/aase pose <id>`、`/aase fx <id>`、`/aase mirror`。
+
+**存成自己的範本**:擺好一個盔甲座 → `/aase pose save <id> [名稱]`。它會把目前姿勢寫進 `presets.yml`,之後 `/aase pose <id>` 就能重用。等於你負責美感、插件負責記憶。
+
+> 內建姿勢的角度是保守的近似值,可能不完美 —— 直接改 `presets.yml` 的數字(度),`/aase reload` 生效;或在遊戲裡微調好再 `pose save` 覆蓋。
+
+## 9. 盔甲座
+
+**姿勢**:六個部位(頭 / 身 / 左臂 / 右臂 / 左腿 / 右腿),每個三軸(X 前後傾、Y 左右轉、Z 側展),單位度。用範本、工具或面板調。
+
+**裝備**:把想要的裝備拿在**副手**,執行 `/aase setequip <欄位>`:`head / chest / legs / feet / mainhand / offhand`。副手空 = 清掉那格。
+
+**開關(旗標)**:`/aase flag <名稱>` 或面板旗標列切換:
+
+| 旗標 | 作用 |
+|---|---|
+| small | 迷你盔甲座 |
+| invisible | 隱形(只看得到裝備) |
+| nobaseplate | 去掉底板 |
+| nogravity | 不受重力(編輯預設開) |
+| arms | 顯示手臂(能擺手臂姿勢) |
+| marker | 標記模式:無碰撞箱、超小,常用來當裝飾底座 |
+| glowing | 發光輪廓 |
+
+**命名**:`/aase setname <MiniMessage>`,例如 `/aase setname <red>守衛`。留空清除。
+
+## 10. Display 元件
+
+Display 實體比盔甲座自由太多:任意縮放、任意旋轉、無碰撞箱。三種:
+
+- **物品 Display(item)**:顯示一個物品。`/aase adddisplay item`(預設用你副手的物品,沒有就石頭);之後 `/aase setitem`(副手物品)換內容。
+- **方塊 Display(block)**:顯示一個方塊。`/aase adddisplay block` → `/aase setblock minecraft:oak_log`。
+- **文字 Display(text)**:懸浮文字。`/aase adddisplay text` → `/aase settext <MiniMessage>`。
+
+編輯變換:選中後用工具切到 **平移 / 旋轉 / 縮放** 模式微調,或控制面板。Display 的旋轉/縮放是動畫最順的載體(見 §12)。
+
+## 11. 粒子特效
+
+`/aase particle add <粒子類型>`(tab 補全看常用清單,例如 FLAME / HEART / CHERRY_LEAVES / END_ROD / DUST / SOUL_FIRE_FLAME)。發射器會加在你目前位置(相對場景原點)。`/aase particle clear` 清掉整個場景的發射器。用範本庫下排特效更快。
+
+**效能設計**:發射器是隱形標記實體,只在「所在區塊已載入」且「附近有玩家」時才發射,而且全服每 tick 有處理上限(config `particles.budget-per-tick`)。不會因為你放很多而拖垮伺服器。
+
+## 12. 動畫(關鍵影格)
+
+> 這是這個工具「以後可以被變成動畫」的核心。先讀懂概念再動手。
+
+### 概念
+
+動畫 = 一條時間軸(長度以 **tick** 計,20 tick = 1 秒)+ 每個元件一條「軌道」+ 軌道上的「關鍵影格」。播放時,插件在關鍵影格之間**自動補間(插值)**,所以你只要擺幾個關鍵姿勢,中間會自己動。
+
+### 做一段動畫(步驟)
+
+1. 先把場景元件放好(`/aase addstand` 等),進 session。
+2. 選一個元件,擺好**起始**姿勢 → `/aase anim key 0`(在第 0 tick 記一格)。
+3. 把同一個元件擺成**結束**姿勢 → `/aase anim key 20`(在第 20 tick 記一格)。
+4. `/aase anim length 20` 設定動畫長度。
+5. `/aase anim play` → 元件會在兩個姿勢間平滑來回。
+6. `/aase anim loop` 切換循環;`/aase anim stop` 停止並回到存檔姿勢;`/aase anim clear` 清空動畫。
+
+多個元件各自 `key` 就會一起動。想要更細緻就多記幾格(例如 0 / 10 / 20 / 30)。
+
+### 補間怎麼算
+
+- 位置 / 縮放:直線內插。
+- Display 旋轉:四元數最短路徑內插(nlerp),不會亂轉。
+- 姿勢角度:各軸直線內插。
+
+### 效能與載體選擇(重要)
+
+- **Display 實體**走客戶端插值 —— 幾乎零伺服器成本、最順,**做動畫優先用 Display**。
+- **盔甲座**沒有客戶端插值,播放時插件逐 tick 幫它換姿勢,有成本 —— 所以盔甲座動畫**只在你編輯的當下**播放,不常駐。
+- 想要「作品放在世界裡自己一直動」→ **匯出成 mcfunction 資料包**(§14),由資料包在伺服器上驅動,不吃編輯 session。
+
+### 現況與限制
+
+- 動畫編輯目前走指令(`/aase anim …`),還沒有視覺化時間軸 GUI(見 §20 路線圖)。
+- 即時播放只在編輯 session 內;離開/登出會自動停。
+
+## 13. 存檔 · 讀取 · 分享 · 編輯既有作品
+
+- `/aase save` — 存成 `scenes/<你的UUID>/<場景id>.json`。
+- `/aase list` — 你的場景清單。
+- `/aase load <名稱>` — 在你腳下**放一份新的**(可放多份)。
+- `/aase edit` — 站在既有作品旁邊,把它**重新綁定**成 session 繼續編輯(不會產生分身)。
+- `/aase close` — 結束編輯(作品保留在世界)。
+- **分享**:JSON 檔本身就是可攜的 —— 把 `scenes/…/xxx.json` 傳給別人,丟進他的 `scenes/<他的UUID>/` 即可(記得改檔內 `owner` 或由管理員處理)。分享碼/一鍵匯入是後續版本(§20)。
+
+## 14. 匯出
+
+### summon 指令
+
+`/aase export command` —— 聊天出現一個**可點擊複製**的按鈕,把整個場景的 `/summon` 指令複製到剪貼簿;同時存成 `exports/<場景>.txt`。貼進遊戲或指令方塊執行就能重現作品。
+
+### mcfunction 資料包
+
+`/aase export function` —— 匯出一個資料包到 `exports/<場景>/datapack/`:
+
+```
+pack.mcmeta
+data/aase/function/summon.mcfunction     ← 召喚整個場景(元件帶 Tag)
+（有動畫時再多)
+data/aase/function/load.mcfunction        ← 初始化計時器
+data/aase/function/tick.mcfunction        ← 驅動關鍵影格播放(每 tick 自我排程)
+data/aase/function/frames/frame_*.mcfunction
+```
+
+用法:把資料夾丟進世界的 `datapacks/`,`/reload`,然後:
+
+- 靜態:`/function aase:summon`
+- 動畫:`/function aase:load` → `/function aase:summon` → `/function aase:tick`
+
+> **最佳努力**:pack_format 與 `function` 資料夾名稱依 MC 版本可能要調整;裝備只帶物品 id、方塊只帶方塊名。`SummonExporter` / `McFunctionExporter` 是集中修改點。
+
+## 15. 指令總表
+
+| 指令 | 說明 | 權限 |
+|---|---|---|
+| `/aase` | 開控制面板 | aase.use |
+| `/aase guide` | 打開翻頁手冊 | aase.use |
+| `/aase tool` | 取得編輯工具 | aase.use |
+| `/aase new <名稱>` | 新場景 | aase.use |
+| `/aase presets` | 範本庫 GUI | aase.use |
+| `/aase pose <id>` / `pose save <id> [名稱]` | 套用 / 儲存姿勢 | aase.use |
+| `/aase fx <id>` | 加特效範本 | aase.use |
+| `/aase mirror` | 左右鏡像 | aase.use |
+| `/aase addstand` | 加盔甲座 | aase.create.armorstand |
+| `/aase adddisplay <item\|block\|text>` | 加 Display | aase.create.display |
+| `/aase setblock/settext/setitem/setname/setequip/flag …` | 編輯內容 | aase.use |
+| `/aase particle add <類型>` / `clear` | 粒子 | aase.use |
+| `/aase anim key/length/loop/play/stop/clear` | 動畫 | aase.animate |
+| `/aase save` / `load <名稱>` / `list` / `edit` / `delete` | 存讀/清單/編輯/刪除 | aase.use / aase.scene.save |
+| `/aase export command` / `export function` | 匯出 | aase.export.command |
+| `/aase close` | 結束編輯 | aase.use |
+| `/aase reload` | 重載設定 | aase.admin |
+
+## 16. 權限總表
+
+```
+aase.use                 開編輯器 / 用工具(預設所有人)
+aase.create.armorstand   放盔甲座
+aase.create.display      放 Display
+aase.scene.save          存檔
+aase.scene.share         匯出/匯入分享
+aase.export.command      匯出指令/資料包
+aase.animate             動畫
+aase.admin               管理(編他人、reload、purge)— 預設 OP
+aase.bypass.region       略過領地檢查 — 預設 OP
+aase.bypass.limit        略過數量上限 — 預設 OP
+```
+
+## 17. 設定檔
+
+- **config.yml**:工具材質、步進大小、每人/每區塊/全域數量上限、領地事件探針開關、粒子預算與範圍。
+- **presets.yml**:姿勢與特效範本(角度用度,可增改;`/aase pose save` 會寫進這裡)。
+- **messages.yml**:所有玩家可見文字(MiniMessage,可翻譯;指令名 `<aqua>`、點擊提示 `<yellow>`)。
+- **guide.yml**:遊戲內翻頁手冊的每一頁(書是紙底色,用深色)。
+
+全部 `/aase reload` 生效,不用重啟。
+
+## 18. 疑難排解 FAQ
+
+**Q:工具左右鍵沒反應?** 先 `/aase new` 或 `/aase edit` 進 session,再拿工具右鍵點元件選取。
+
+**Q:滾輪不能換物品欄?** 編輯中滾輪被拿去換步進/軸。`/aase close` 結束編輯即可。
+
+**Q:放不了東西、說「這裡受保護」?** 你在別人的領地。到自己的地,或請管理員給 `aase.bypass.region`。
+
+**Q:載入(load)後變兩份?** `load` 是「放新的一份」。要接續編輯既有作品用 `/aase edit`。
+
+**Q:動畫播完就停/不會一直動?** 即時播放只在編輯時。要常駐動畫請 `export function` 用資料包驅動。
+
+**Q:範本姿勢看起來怪?** 內建角度是近似值。改 `presets.yml` 或自己擺好 `pose save` 覆蓋。
+
+**Q:匯出的指令跑出來怪怪的?** NBT 是最佳努力、版本敏感。回報給作者修 `SummonExporter`/`McFunctionExporter`。
+
+## 19. 效能與安全設計
+
+- **不掃世界 / 不掃區塊**:數量計數在記憶體,孤兒實體只在區塊載入當下處理。
+- **粒子有預算**:只在附近有玩家 + 已載入區塊發射,每 tick 全服上限。
+- **動畫有節制**:Display 走客戶端插值;盔甲座逐 tick 只在編輯 session 內,離線自動停。
+- **反格里芬**:元件有擁有權 PDC,別人打不壞、拿不走;數量上限防洗版;尊重領地保護外掛。
+- **跨平台**:只用 Bukkit/Spigot API,文字用內嵌 Adventure,丟 Spigot 也正常。
+
+## 20. 路線圖
+
+往「完整動畫工具」的下一步(尚未做):
+
+- **視覺化時間軸 GUI**:拖曳關鍵影格、預覽刷桿,取代目前的 `/aase anim` 指令。
+- **姿勢間補間助手**:選兩個存好的姿勢,一鍵生成中間動畫。
+- **緩動(easing)**:linear 以外的 ease-in/out,讓動作更自然。
+- **分享碼 / 一鍵匯入**:把作品或範本包壓成一段碼分享。
+- **對外 API / 事件**:讓別的插件掛我們的存檔/放置事件。
+- **拖放式裝備 GUI**、**粒子/動畫視覺化編輯面板**。
+
+有想優先的方向跟作者說。
