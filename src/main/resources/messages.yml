@@ -1,0 +1,186 @@
+# AwesomeArmorStandEditor — 玩家可見文字(MiniMessage)
+# 繁體中文;可自由改成其他語言。指令名用 <aqua>,點擊提示用 <yellow>。
+
+prefix: "<gold>✎</gold> "
+
+system:
+  no-permission: "<red>你沒有權限這麼做"
+  player-only: "<red>這個指令只能玩家使用"
+
+reload:
+  ok: "<green>設定已重載"
+
+usage:
+  new: "<gray>用法:<aqua>/aase new <名稱>"
+  load: "<gray>用法:<aqua>/aase load <名稱>"
+  adddisplay: "<gray>用法:<aqua>/aase adddisplay <item|block|text>"
+  setequip: "<gray>用法:<aqua>/aase setequip <head|chest|legs|feet|mainhand|offhand>"
+  flag: "<gray>用法:<aqua>/aase flag <small|invisible|nobaseplate|nogravity|arms|marker|glowing>"
+  particle: "<gray>用法:<aqua>/aase particle add <粒子類型></aqua> 或 <aqua>/aase particle clear"
+  anim: "<gray>用法:<aqua>/aase anim <key <tick>|length <ticks>|loop|play|stop|clear>"
+  export: "<gray>用法:<aqua>/aase export <command|function>"
+  pose: "<gray>用法:<aqua>/aase pose <範本id></aqua> 套用,或 <aqua>/aase pose save <id> [名稱]</aqua> 存成自己的範本"
+  fx: "<gray>用法:<aqua>/aase fx <特效id></aqua>(用 <aqua>/aase presets</aqua> 看清單)"
+
+session:
+  none: "<red>你還沒有進行中的場景,先用 <aqua>/aase new <名稱></aqua> 開始"
+  closed: "<green>已結束編輯(作品保留在世界中)"
+
+scene:
+  new: "<green>已建立場景 <white>{name}</white>,開始擺放吧"
+  saved: "<green>已儲存 <white>{name}</white>(共 {count} 個元件)"
+  loaded: "<green>已放置 <white>{name}</white>(共 {count} 個元件)"
+  not-found: "<red>找不到名為 <white>{name}</white> 的場景"
+
+add:
+  stand: "<green>已新增盔甲座 <white>#{id}"
+  display: "<green>已新增 Display <white>#{id}"
+
+select:
+  none: "<yellow>先右鍵點擊一個元件來選取"
+  other-scene: "<red>那個元件屬於別的場景"
+
+edit:
+  begin: "<green>正在編輯既有作品 <white>{name}"
+  no-target: "<red>附近沒有可編輯的元件"
+  no-scene: "<red>找不到這個元件的存檔"
+  not-owner: "<red>這不是你的作品"
+
+delete:
+  ok: "<green>已刪除元件 <white>#{id}"
+
+limit:
+  per-player: "<red>你的元件數量已達上限({max})"
+  global: "<red>伺服器元件總數已達上限"
+  per-chunk: "<red>這個區塊的元件數量已達上限({max})"
+
+region:
+  denied: "<red>這裡受保護,無法在此放置或編輯"
+
+payload:
+  wrong-kind: "<red>選取的元件不是對應的 Display 類型"
+  offhand-empty: "<yellow>把想要的物品拿在副手,再執行一次"
+  set: "<green>已更新內容"
+
+name:
+  only-stand: "<red>只有盔甲座能設定名稱"
+  set: "<green>已更新名稱"
+
+equip:
+  only-stand: "<red>只有盔甲座能穿裝備"
+  bad-slot: "<red>未知的裝備欄位"
+  set: "<green>已更新 <white>{slot}</white> 裝備(以副手物品為準)"
+  hint: "<yellow>把物品拿在副手,執行 <aqua>/aase setequip <head|chest|legs|feet|mainhand|offhand>"
+
+flag:
+  only-stand: "<red>只有盔甲座能切換這些開關"
+  toggled: "<green>已切換 <white>{flag}"
+
+export:
+  empty: "<yellow>這個場景還沒有任何元件"
+  click: "<yellow>[點擊複製 summon 指令到剪貼簿]"
+  saved: "<gray>也已存成檔案:<white>{path}"
+  mcfunction-saved: "<green>已匯出 mcfunction 資料包到 <white>{path}"
+
+particle:
+  invalid: "<red>未知的粒子類型 <white>{type}</white>(用 tab 補全看可用清單)"
+  added: "<green>已加入粒子發射器 <white>{type}"
+  cleared: "<green>已清除這個場景的所有粒子發射器"
+
+anim:
+  key: "<green>已在 tick <white>{tick}</white> 記錄元件 <white>#{id}</white> 的關鍵影格"
+  length: "<green>動畫長度設為 <white>{ticks}</white> tick"
+  loop-on: "<green>動畫循環:開"
+  loop-off: "<green>動畫循環:關"
+  playing: "<green>播放動畫中(再 <aqua>/aase anim stop</aqua> 停止)"
+  stopped: "<green>已停止動畫,元件回到存檔狀態"
+  cleared: "<green>已清除動畫"
+  empty: "<yellow>還沒有關鍵影格,先用 <aqua>/aase anim key <tick></aqua> 記錄"
+
+preset:
+  only-stand: "<red>先右鍵選一個盔甲座,才能套用姿勢範本"
+  pose-missing: "<red>沒有這個姿勢範本:<white>{id}"
+  pose-applied: "<green>已套用姿勢 <white>{name}</white>(可再用工具微調,或 <aqua>/aase mirror</aqua> 對稱)"
+  fx-missing: "<red>沒有這個特效範本:<white>{id}"
+  fx-applied: "<green>已加上特效 <white>{name}"
+  mirrored: "<green>已把左邊的手腳鏡射到右邊(對稱)"
+  pose-saved: "<green>已把目前姿勢存成範本 <white>{id}</white>,以後 <aqua>/aase pose {id}</aqua> 就能叫出來"
+
+gallery:
+  title: "範本庫 · 點一下就套用"
+  info: "<gold>選一個範本 —— 上排姿勢套到選取的盔甲座,下排特效直接加上"
+  poses-label: "<aqua>姿勢範本 ↑"
+  fx-label: "<aqua>特效範本 ↑"
+  mirror: "<yellow>鏡像(左右對稱)"
+  close: "<gray>關閉"
+  apply-hint: "<yellow>點擊套用"
+
+tool:
+  name: "<gold>盔甲座編輯工具"
+  given: "<green>已給你編輯工具 — 右鍵點擊元件選取,左右鍵微調"
+  lore1: "<gray>左鍵 <white>−  <gray>右鍵 <white>+"
+  lore2: "<gray>滾輪 <white>換步進  <gray>潛行+滾輪 <white>換軸"
+  lore3: "<gray>潛行+左鍵 <white>換模式  <gray>潛行+右鍵 <white>換部位"
+  lore4: "<gray>右鍵點擊元件 <white>選取"
+
+display:
+  default-text: "文字"
+
+list:
+  empty: "<yellow>你還沒有任何存檔,用 <aqua>/aase new <名稱></aqua> 開始"
+  header: "<gold>你的場景(共 {count} 個)"
+  entry: "<gray>· <white>{name} <dark_gray>({count} 元件)"
+
+help:
+  header: "<gold>AwesomeArmorStandEditor 指令"
+  tool: "<aqua>/aase tool <gray>取得編輯工具"
+  presets: "<aqua>/aase presets <gray>範本庫:不會擺?選一個姿勢/特效點一下就好"
+  new: "<aqua>/aase new <名稱> <gray>開始新場景"
+  addstand: "<aqua>/aase addstand <gray>新增一個盔甲座"
+  adddisplay: "<aqua>/aase adddisplay <item|block|text> <gray>新增 Display"
+  controls: "<gray>工具:左右鍵微調、滾輪換步進、潛行+滾輪換軸、潛行+左鍵換模式"
+  save: "<aqua>/aase save <gray>儲存目前場景"
+  load: "<aqua>/aase load <名稱> <gray>在你腳下放置一份"
+  edit: "<aqua>/aase edit <gray>綁定並編輯附近既有作品"
+  list: "<aqua>/aase list <gray>列出你的場景"
+  export: "<aqua>/aase export command <gray>匯出 summon 指令"
+  close: "<aqua>/aase close <gray>結束編輯(作品保留)"
+
+panel:
+  title: "盔甲座編輯器"
+  info: "<gold>場景 <white>{name} <dark_gray>| 選取 <white>{sel}"
+  add-stand: "<green>+ 盔甲座"
+  add-item: "<green>+ 物品 Display"
+  add-block: "<green>+ 方塊 Display"
+  add-text: "<green>+ 文字 Display"
+  mode-move: "<aqua>模式:移動"
+  mode-pose: "<aqua>模式:姿勢"
+  mode-translate: "<aqua>模式:平移"
+  mode-rotate: "<aqua>模式:旋轉"
+  mode-scale: "<aqua>模式:縮放"
+  part-head: "<white>部位:頭"
+  part-body: "<white>部位:身"
+  part-left_arm: "<white>部位:左臂"
+  part-right_arm: "<white>部位:右臂"
+  part-left_leg: "<white>部位:左腿"
+  part-right_leg: "<white>部位:右腿"
+  axis-x: "<red>軸:X"
+  axis-y: "<green>軸:Y"
+  axis-z: "<blue>軸:Z"
+  step-down: "<yellow>步進 −"
+  step-up: "<yellow>步進 +"
+  nudge-down: "<red>微調 −"
+  nudge-up: "<green>微調 +"
+  flag-small: "<white>迷你"
+  flag-invisible: "<white>隱形"
+  flag-nobaseplate: "<white>無底板"
+  flag-nogravity: "<white>無重力"
+  flag-arms: "<white>手臂"
+  flag-marker: "<white>標記(無碰撞)"
+  flag-glowing: "<white>發光"
+  equip: "<yellow>裝備(副手物品 + /aase setequip)"
+  presets: "<gold>✦ 範本庫(不會擺?點這裡)"
+  save: "<green>儲存"
+  export: "<aqua>匯出 summon 指令"
+  delete: "<red>刪除選取元件"
+  close: "<gray>關閉"

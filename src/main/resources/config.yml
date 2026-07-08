@@ -1,0 +1,31 @@
+# AwesomeArmorStandEditor — 設定
+# 玩家可見文字在 messages.yml。此檔只放行為/效能常數,可用 /aase reload 重載。
+
+tool:
+  # 編輯工具的物品材質(Bukkit Material 名稱)
+  material: BLAZE_ROD
+  # 用 /aase edit 綁定既有作品時,搜尋附近元件的範圍(格)
+  select-range: 6
+
+# 每次點擊調整的步進;每種模式一組,滾輪在其中循環
+steps:
+  rotation-deg: [1.0, 15.0, 45.0]   # 姿勢 / 旋轉(度)
+  translate: [0.1, 0.5, 1.0]        # 移動 / 平移(格)
+  scale: [0.1, 0.25, 1.0]           # 縮放
+
+# 數量上限(記憶體計數,超限拒絕放置)。bypass 權限:aase.bypass.limit
+limits:
+  per-player: 200
+  global: 5000
+  per-chunk: 100
+
+region:
+  # true = 放置/編輯前模擬一次保護事件,尊重 GriefPrevention/WorldGuard/Towny/Lands 等領地外掛
+  # false = 不檢查領地(僅靠權限與擁有權)。bypass 權限:aase.bypass.region
+  event-probe: true
+
+# 粒子發射器(/aase particle):只在已載入區塊 + 附近有玩家時發射,並有每 tick 全域上限
+particles:
+  budget-per-tick: 200   # 每 tick 全服最多處理的發射器數(超過就跳過,保護 TPS)
+  render-range: 32       # 發射器周圍多少格內有玩家才發射
+

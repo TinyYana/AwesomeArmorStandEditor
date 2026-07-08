@@ -1,0 +1,86 @@
+# 範本庫 — 給不想從零擺姿勢的人。角度用「度」,可自由調整;/aase reload 生效。
+# 也可以在遊戲裡用 /aase pose save <id> 把自己擺好的姿勢存進來。
+# 姿勢軸:每個部位 [x, y, z] = [前後傾, 左右轉, 側展] 度數。
+
+poses:
+  - id: stand
+    name: "立正"
+    icon: ARMOR_STAND
+    arms: true
+    left-arm: [0, 0, 0]
+    right-arm: [0, 0, 0]
+    left-leg: [0, 0, 0]
+    right-leg: [0, 0, 0]
+  - id: tpose
+    name: "T 字"
+    icon: STICK
+    arms: true
+    left-arm: [0, 0, -90]
+    right-arm: [0, 0, 90]
+  - id: cheer
+    name: "萬歲"
+    icon: FIREWORK_ROCKET
+    arms: true
+    left-arm: [0, 0, -160]
+    right-arm: [0, 0, 160]
+  - id: wave
+    name: "揮手"
+    icon: PAPER
+    arms: true
+    right-arm: [0, 0, 150]
+    left-arm: [5, 0, -5]
+  - id: point
+    name: "指向前方"
+    icon: SPYGLASS
+    arms: true
+    right-arm: [-90, 0, 0]
+  - id: think
+    name: "沉思"
+    icon: BOOK
+    arms: true
+    right-arm: [-110, -25, 10]
+    left-arm: [10, 0, -5]
+    head: [15, -20, 0]
+  - id: sit
+    name: "坐姿(懸空)"
+    icon: OAK_STAIRS
+    arms: true
+    left-leg: [-90, 0, 5]
+    right-leg: [-90, 0, -5]
+    left-arm: [-25, 0, -5]
+    right-arm: [-25, 0, 5]
+  - id: run
+    name: "跑步"
+    icon: LEATHER_BOOTS
+    arms: true
+    left-arm: [-40, 0, 0]
+    right-arm: [40, 0, 0]
+    left-leg: [35, 0, 0]
+    right-leg: [-35, 0, 0]
+
+fx:
+  - id: flame_aura
+    name: "火焰光環"
+    icon: BLAZE_POWDER
+    emitters:
+      - { particle: FLAME, offset: [0, 1.0, 0], count: 6, spread: [0.35, 0.5, 0.35], speed: 0.01, rate: 3 }
+  - id: hearts
+    name: "愛心"
+    icon: POPPY
+    emitters:
+      - { particle: HEART, offset: [0, 2.2, 0], count: 2, spread: [0.3, 0.2, 0.3], speed: 0.0, rate: 12 }
+  - id: cherry
+    name: "櫻花飄落"
+    icon: CHERRY_LEAVES
+    emitters:
+      - { particle: CHERRY_LEAVES, offset: [0, 2.5, 0], count: 3, spread: [0.6, 0.2, 0.6], speed: 0.0, rate: 6 }
+  - id: sparkle
+    name: "星塵"
+    icon: NETHER_STAR
+    emitters:
+      - { particle: END_ROD, offset: [0, 1.2, 0], count: 4, spread: [0.4, 0.5, 0.4], speed: 0.005, rate: 5 }
+  - id: soul
+    name: "靈魂之焰"
+    icon: SOUL_LANTERN
+    emitters:
+      - { particle: SOUL_FIRE_FLAME, offset: [0, 1.0, 0], count: 5, spread: [0.3, 0.5, 0.3], speed: 0.01, rate: 4 }

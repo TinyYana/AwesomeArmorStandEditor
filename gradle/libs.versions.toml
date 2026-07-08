@@ -1,0 +1,27 @@
+[versions]
+kotlin = "2.4.20-Beta1"
+
+paper-api = "26.2.build.+"
+minecraft = "26.2"
+
+shadow = "9.5.1"
+run-task = "3.0.2"
+
+gson = "2.11.0"
+
+# Text: shaded + relocated so rich text / MiniMessage work identically on Spigot and Paper.
+adventure-bukkit = "4.4.1"
+adventure = "4.24.0"
+
+[libraries]
+paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper-api" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
+# JSON persistence. Paper/Spigot bundle Gson at runtime; compile-only here, not shaded.
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+# Adventure platform bridge (works on Spigot + Paper) + MiniMessage. Shaded & relocated.
+adventure-platform-bukkit = { module = "net.kyori:adventure-platform-bukkit", version.ref = "adventure-bukkit" }
+adventure-minimessage = { module = "net.kyori:adventure-text-minimessage", version.ref = "adventure" }
+
+[plugins]
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+run-paper = { id = "xyz.jpenilla.run-paper", version.ref = "run-task" }

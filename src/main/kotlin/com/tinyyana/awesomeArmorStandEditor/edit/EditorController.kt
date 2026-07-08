@@ -1,0 +1,591 @@
+package com.tinyyana.awesomeArmorStandEditor.edit
+
+import com.tinyyana.awesomeArmorStandEditor.AwesomeArmorStandEditorPlugin
+import com.tinyyana.awesomeArmorStandEditor.export.McFunctionExporter
+import com.tinyyana.awesomeArmorStandEditor.export.SummonExporter
+import com.tinyyana.awesomeArmorStandEditor.integration.LycoLibHook
+import com.tinyyana.awesomeArmorStandEditor.model.Anchor
+import com.tinyyana.awesomeArmorStandEditor.model.Animation
+import com.tinyyana.awesomeArmorStandEditor.model.ArmorStandElement
+import com.tinyyana.awesomeArmorStandEditor.model.DisplayElement
+import com.tinyyana.awesomeArmorStandEditor.model.DisplayKind
+import com.tinyyana.awesomeArmorStandEditor.model.Element
+import com.tinyyana.awesomeArmorStandEditor.model.Keyframe
+import com.tinyyana.awesomeArmorStandEditor.model.ParticleEmitter
+import com.tinyyana.awesomeArmorStandEditor.model.Scene
+import com.tinyyana.awesomeArmorStandEditor.model.Vec3
+import com.tinyyana.awesomeArmorStandEditor.session.EditMode
+import com.tinyyana.awesomeArmorStandEditor.session.EditSession
+import com.tinyyana.awesomeArmorStandEditor.store.ItemCodec
+import net.kyori.adventure.text.event.ClickEvent
+import org.bukkit.Particle
+import org.bukkit.configuration.file.YamlConfiguration
+import org.bukkit.entity.Entity
+import org.bukkit.entity.Player
+import java.io.File
+import java.util.Locale
+import java.util.UUID
+
+/**
+ * Shared editing operations, used by both the command and the in-world tool listener so the two
+ * entry points never diverge. All player messaging goes through Texts; all placement through
+ * PlacementService. Runs on the main thread (called from command/event handlers).
+ */
+class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
+
+    private val armorStandModes = listOf(EditMode.POSE, EditMode.MOVE)
+    private val displayModes = listOf(EditMode.TRANSLATE, EditMode.ROTATE, EditMode.SCALE, EditMode.MOVE)
+
+    // --- creation ---
+
+    fun addStand(player: Player) {
+        val session = plugin.sessions.get(player.uniqueId) ?: return noSession(player)
+        if (!checkAddAllowed(player, session)) return
+        val origin = ensureOrigin(session, player)
+        val element = ArmorStandElement(localId = session.scene.nextLocalId(), offset = offsetOf(player, origin), yaw = player.location.yaw)
+        finishAdd(player, session, element, EditMode.POSE, "add.stand")
+    }
+
+    fun addDisplay(player: Player, kind: DisplayKind, payload: String) {
+        val session = plugin.sessions.get(player.uniqueId) ?: return noSession(player)
+        if (!checkAddAllowed(player, session)) return
+        val origin = ensureOrigin(session, player)
+        val element = DisplayElement(
+            localId = session.scene.nextLocalId(), offset = offsetOf(player, origin), yaw = player.location.yaw,
+            kind = kind, payload = payload,
+        )
+        finishAdd(player, session, element, EditMode.TRANSLATE, "add.display")
+    }
+
+    private fun finishAdd(player: Player, session: EditSession, element: Element, mode: EditMode, msgKey: String) {
+        val origin = session.origin ?: return
+        val entity = plugin.placement.spawn(origin, session.scene.id, element, player.uniqueId)
+        session.scene.elements += element
+        session.entities[element.localId] = entity
+        session.selectedLocalId = element.localId
+        session.mode = mode
+        session.dirty = true
+        plugin.texts.send(player, msgKey, "id" to element.localId.toString())
+        readout(player, session)
+    }
+
+    // --- selection ---
+
+    fun select(player: Player, entity: Entity): Boolean {
+        val session = plugin.sessions.get(player.uniqueId) ?: return false
+        val tag = plugin.registry.read(entity) ?: return false
+        if (tag.sceneId != session.scene.id) {
+            plugin.texts.send(player, "select.other-scene")
+            return false
+        }
+        val element = session.scene.elements.find { it.localId == tag.localId } ?: return false
+        session.selectedLocalId = element.localId
+        session.entities[element.localId] = entity
+        session.mode = if (element is ArmorStandElement) EditMode.POSE else EditMode.TRANSLATE
+        readout(player, session)
+        return true
+    }
+
+    // --- adjustment ---
+
+    fun adjust(player: Player, direction: Int) {
+        val session = plugin.sessions.get(player.uniqueId) ?: return noSession(player)
+        val element = session.selected() ?: return plugin.texts.send(player, "select.none")
+        val entity = session.entities[element.localId] ?: return
+        val step = currentStep(session) * direction
+
+        when {
+            element is ArmorStandElement && session.mode == EditMode.POSE -> {
+                element.pose = PoseOps.setPart(element.pose, session.part, PoseOps.nudge(PoseOps.getPart(element.pose, session.part), session.axis, step))
+                plugin.placement.apply(entity, element)
+            }
+            session.mode == EditMode.MOVE -> {
+                element.moveOffset(session.axis, step)
+                val origin = session.origin ?: return
+                entity.teleport(plugin.placement.elementLocation(origin, element))
+            }
+            element is DisplayElement && session.mode == EditMode.TRANSLATE -> {
+                element.transform = TransformOps.translate(element.transform, session.axis, step)
+                plugin.placement.apply(entity, element)
+            }
+            element is DisplayElement && session.mode == EditMode.ROTATE -> {
+                element.transform = TransformOps.rotate(element.transform, session.axis, step)
+                plugin.placement.apply(entity, element)
+            }
+            element is DisplayElement && session.mode == EditMode.SCALE -> {
+                element.transform = TransformOps.scaleAxis(element.transform, session.axis, step)
+                plugin.placement.apply(entity, element)
+            }
+            else -> return
+        }
+        session.dirty = true
+        readout(player, session)
+    }
+
+    private fun Element.moveOffset(axis: Axis, delta: Double) {
+        val o = offset
+        val n = when (axis) {
+            Axis.X -> o.copy(x = o.x + delta)
+            Axis.Y -> o.copy(y = o.y + delta)
+            Axis.Z -> o.copy(z = o.z + delta)
+        }
+        when (this) {
+            is ArmorStandElement -> this.offset = n
+            is DisplayElement -> this.offset = n
+        }
+    }
+
+    // --- cycling ---
+
+    fun cycleAxis(player: Player, dir: Int) = withSession(player) { s ->
+        s.axis = Axis.entries[(s.axis.ordinal + dir).mod(Axis.entries.size)]
+        readout(player, s)
+    }
+
+    fun cyclePart(player: Player, dir: Int) = withSession(player) { s ->
+        s.part = BodyPart.entries[(s.part.ordinal + dir).mod(BodyPart.entries.size)]
+        readout(player, s)
+    }
+
+    fun cycleStep(player: Player, dir: Int) = withSession(player) { s ->
+        when (currentStepFamily(s)) {
+            StepFamily.ROTATION -> s.rotStepIndex += dir
+            StepFamily.TRANSLATE -> s.transStepIndex += dir
+            StepFamily.SCALE -> s.scaleStepIndex += dir
+        }
+        readout(player, s)
+    }
+
+    fun cycleMode(player: Player, dir: Int) = withSession(player) { s ->
+        val element = s.selected() ?: return@withSession
+        val modes = if (element is ArmorStandElement) armorStandModes else displayModes
+        val idx = modes.indexOf(s.mode).coerceAtLeast(0)
+        s.mode = modes[(idx + dir).mod(modes.size)]
+        readout(player, s)
+    }
+
+    fun deleteSelected(player: Player) = withSession(player) { s ->
+        val element = s.selected() ?: return@withSession plugin.texts.send(player, "select.none")
+        plugin.placement.despawn(s, element.localId)
+        s.scene.elements.removeIf { it.localId == element.localId }
+        s.selectedLocalId = null
+        s.dirty = true
+        plugin.texts.send(player, "delete.ok", "id" to element.localId.toString())
+    }
+
+    // --- scene lifecycle ---
+
+    fun openNew(player: Player, name: String) {
+        val scene = Scene(id = UUID.randomUUID().toString(), owner = player.uniqueId.toString(), name = name)
+        val session = plugin.sessions.open(player.uniqueId, scene)
+        session.origin = player.location.clone()
+        plugin.texts.send(player, "scene.new", "name" to name)
+    }
+
+    fun save(player: Player) = withSession(player) { s ->
+        s.origin?.let { o -> s.scene.lastAnchor = Anchor(o.world?.name ?: "", o.x, o.y, o.z) }
+        plugin.store.save(s.scene)
+        s.dirty = false
+        LycoLibHook.audit(plugin.name, player.name, "scene.save", "name=${s.scene.name} elements=${s.scene.elements.size}")
+        plugin.texts.send(player, "scene.saved", "name" to s.scene.name, "count" to s.scene.elements.size.toString())
+    }
+
+    /** Places a fresh instance of a saved blueprint at the player. */
+    fun loadFresh(player: Player, name: String) {
+        val scene = plugin.store.loadByName(player.uniqueId, name)
+            ?: return plugin.texts.send(player, "scene.not-found", "name" to name)
+        plugin.sessions.get(player.uniqueId)?.let { plugin.sessions.close(player.uniqueId) }
+        val session = plugin.sessions.open(player.uniqueId, scene)
+        val origin = player.location.clone()
+        plugin.placement.placeAll(session, origin, player.uniqueId)
+        for (emitter in scene.emitters) plugin.particles.spawnEmitter(origin, scene.id, player.uniqueId, emitter)
+        plugin.texts.send(player, "scene.loaded", "name" to name, "count" to scene.elements.size.toString())
+    }
+
+    /** Re-bind a session to already-placed art the player is standing near (no duplicate spawn). */
+    fun editFromTarget(player: Player) {
+        val range = plugin.settings.selectRange.toDouble()
+        val target = player.getNearbyEntities(range, range, range)
+            .filter { plugin.registry.isOurs(it) }
+            .minByOrNull { it.location.distanceSquared(player.eyeLocation) }
+            ?: return plugin.texts.send(player, "edit.no-target")
+        val tag = plugin.registry.read(target) ?: return
+        if (tag.owner != player.uniqueId && !player.hasPermission("aase.admin")) {
+            return plugin.texts.send(player, "edit.not-owner")
+        }
+        val scene = plugin.store.load(tag.owner, tag.sceneId)
+            ?: return plugin.texts.send(player, "edit.no-scene")
+        val matched = scene.elements.find { it.localId == tag.localId } ?: return
+        val session = plugin.sessions.open(player.uniqueId, scene)
+        session.origin = target.location.clone().subtract(matched.offset.x, matched.offset.y, matched.offset.z)
+        val wide = range * 3
+        for (e in player.getNearbyEntities(wide, wide, wide)) {
+            val t = plugin.registry.read(e) ?: continue
+            if (t.sceneId == scene.id) session.entities[t.localId] = e
+        }
+        session.selectedLocalId = tag.localId
+        session.mode = if (matched is ArmorStandElement) EditMode.POSE else EditMode.TRANSLATE
+        plugin.texts.send(player, "edit.begin", "name" to scene.name)
+        readout(player, session)
+    }
+
+    fun close(player: Player) {
+        plugin.sessions.get(player.uniqueId)?.let { plugin.animation.stop(it) }  // stop playback, restore entities
+        if (plugin.sessions.close(player.uniqueId) != null) plugin.texts.send(player, "session.closed")
+        else plugin.texts.send(player, "session.none")
+    }
+
+    // --- payload / name editing ---
+
+    fun setDisplayPayload(player: Player, kind: DisplayKind, payload: String) = withSession(player) { s ->
+        val el = s.selected()
+        if (el !is DisplayElement || el.kind != kind) return@withSession plugin.texts.send(player, "payload.wrong-kind")
+        el.payload = payload
+        s.entities[el.localId]?.let { plugin.placement.apply(it, el) }
+        s.dirty = true
+        plugin.texts.send(player, "payload.set")
+    }
+
+    /** Sets the selected ITEM display's item to the player's off-hand item. */
+    fun setDisplayItemFromOffhand(player: Player) = withSession(player) { s ->
+        val el = s.selected()
+        if (el !is DisplayElement || el.kind != DisplayKind.ITEM) return@withSession plugin.texts.send(player, "payload.wrong-kind")
+        val off = player.inventory.itemInOffHand
+        if (off.type.isAir) return@withSession plugin.texts.send(player, "payload.offhand-empty")
+        el.payload = ItemCodec.encode(off)
+        s.entities[el.localId]?.let { plugin.placement.apply(it, el) }
+        s.dirty = true
+        plugin.texts.send(player, "payload.set")
+    }
+
+    fun setName(player: Player, miniMessage: String?) = withSession(player) { s ->
+        val el = s.selected()
+        if (el !is ArmorStandElement) return@withSession plugin.texts.send(player, "name.only-stand")
+        el.customName = miniMessage
+        s.entities[el.localId]?.let { plugin.placement.apply(it, el) }
+        s.dirty = true
+        plugin.texts.send(player, "name.set")
+    }
+
+    /** Sets one armor-stand equipment slot from the player's off-hand (air clears it). */
+    fun setEquip(player: Player, slot: String) = withSession(player) { s ->
+        val el = s.selected()
+        if (el !is ArmorStandElement) return@withSession plugin.texts.send(player, "equip.only-stand")
+        val off = player.inventory.itemInOffHand
+        val encoded = if (off.type.isAir) null else ItemCodec.encode(off)
+        when (slot.lowercase()) {
+            "head", "helmet" -> el.equipment.head = encoded
+            "chest", "chestplate" -> el.equipment.chest = encoded
+            "legs", "leggings" -> el.equipment.legs = encoded
+            "feet", "boots" -> el.equipment.feet = encoded
+            "mainhand", "hand" -> el.equipment.mainHand = encoded
+            "offhand" -> el.equipment.offHand = encoded
+            else -> return@withSession plugin.texts.send(player, "equip.bad-slot")
+        }
+        s.entities[el.localId]?.let { plugin.placement.apply(it, el) }
+        s.dirty = true
+        plugin.texts.send(player, "equip.set", "slot" to slot)
+    }
+
+    fun toggleFlag(player: Player, flag: String) = withSession(player) { s ->
+        val el = s.selected()
+        if (el !is ArmorStandElement) return@withSession plugin.texts.send(player, "flag.only-stand")
+        val f = el.flags
+        when (flag.lowercase()) {
+            "small" -> f.small = !f.small
+            "invisible" -> f.invisible = !f.invisible
+            "nobaseplate" -> f.noBasePlate = !f.noBasePlate
+            "nogravity" -> f.noGravity = !f.noGravity
+            "arms" -> f.arms = !f.arms
+            "marker" -> f.marker = !f.marker
+            "glowing" -> f.glowing = !f.glowing
+            else -> return@withSession
+        }
+        s.entities[el.localId]?.let { plugin.placement.apply(it, el) }
+        s.dirty = true
+        plugin.texts.send(player, "flag.toggled", "flag" to flag)
+    }
+
+    fun selectedIsArmorStand(player: Player): Boolean =
+        plugin.sessions.get(player.uniqueId)?.selected() is ArmorStandElement
+
+    // --- export ---
+
+    fun exportCommands(player: Player) = withSession(player) { s ->
+        if (s.scene.elements.isEmpty()) return@withSession plugin.texts.send(player, "export.empty")
+        val commands = SummonExporter.export(s.scene)
+        val file = File(plugin.dataFolder, "exports/${sanitize(s.scene.name)}.txt")
+        file.parentFile.mkdirs()
+        file.writeText(commands, Charsets.UTF_8)
+        val clickable = plugin.texts.component("export.click")
+            .clickEvent(ClickEvent.copyToClipboard(commands))
+        plugin.texts.sendComponent(player, clickable)
+        plugin.texts.send(player, "export.saved", "path" to file.path)
+        LycoLibHook.audit(plugin.name, player.name, "scene.export", "name=${s.scene.name}")
+    }
+
+    fun exportMcFunction(player: Player) = withSession(player) { s ->
+        if (s.scene.elements.isEmpty()) return@withSession plugin.texts.send(player, "export.empty")
+        val files = McFunctionExporter.export(s.scene)
+        val base = File(plugin.dataFolder, "exports/${sanitize(s.scene.name)}/datapack")
+        for ((rel, content) in files) {
+            val f = File(base, rel)
+            f.parentFile.mkdirs()
+            f.writeText(content, Charsets.UTF_8)
+        }
+        plugin.texts.send(player, "export.mcfunction-saved", "path" to base.path)
+        LycoLibHook.audit(plugin.name, player.name, "scene.export-mcfunction", "name=${s.scene.name}")
+    }
+
+    private fun sanitize(name: String) = name.replace(Regex("[^A-Za-z0-9_\\-]"), "_").ifBlank { "scene" }
+
+    // --- particles (P2) ---
+
+    fun addEmitter(player: Player, particleType: String) = withSession(player) { s ->
+        val type = particleType.uppercase()
+        if (runCatching { Particle.valueOf(type) }.isFailure) {
+            return@withSession plugin.texts.send(player, "particle.invalid", "type" to particleType)
+        }
+        if (!checkAddAllowed(player, s)) return@withSession
+        val origin = ensureOrigin(s, player)
+        val emitter = ParticleEmitter(id = s.scene.nextEmitterId(), particle = type, offset = offsetOf(player, origin))
+        s.scene.emitters += emitter
+        plugin.particles.spawnEmitter(origin, s.scene.id, player.uniqueId, emitter)
+        s.dirty = true
+        plugin.texts.send(player, "particle.added", "type" to type)
+    }
+
+    fun clearEmitters(player: Player) = withSession(player) { s ->
+        plugin.particles.removeForScene(s.scene.id)
+        s.scene.emitters.clear()
+        s.dirty = true
+        plugin.texts.send(player, "particle.cleared")
+    }
+
+    // --- keyframe animation (P3) ---
+
+    private fun anim(s: EditSession): Animation = s.scene.animation ?: Animation().also { s.scene.animation = it }
+
+    fun animKey(player: Player, tick: Int) = withSession(player) { s ->
+        val el = s.selected() ?: return@withSession plugin.texts.send(player, "select.none")
+        val track = anim(s).track(el.localId)
+        val kf = when (el) {
+            is ArmorStandElement -> Keyframe(tick, pose = el.pose, offset = el.offset)
+            is DisplayElement -> Keyframe(tick, transform = el.transform, offset = el.offset)
+        }
+        track.keyframes.removeIf { it.tick == tick }
+        track.keyframes += kf
+        if (tick > anim(s).lengthTicks) anim(s).lengthTicks = tick
+        s.dirty = true
+        plugin.texts.send(player, "anim.key", "tick" to tick.toString(), "id" to el.localId.toString())
+    }
+
+    fun animLength(player: Player, ticks: Int) = withSession(player) { s ->
+        anim(s).lengthTicks = ticks.coerceAtLeast(1)
+        s.dirty = true
+        plugin.texts.send(player, "anim.length", "ticks" to anim(s).lengthTicks.toString())
+    }
+
+    fun animToggleLoop(player: Player) = withSession(player) { s ->
+        val a = anim(s); a.loop = !a.loop; s.dirty = true
+        plugin.texts.send(player, if (a.loop) "anim.loop-on" else "anim.loop-off")
+    }
+
+    fun animPlay(player: Player) = withSession(player) { s ->
+        if (plugin.animation.play(s)) plugin.texts.send(player, "anim.playing")
+        else plugin.texts.send(player, "anim.empty")
+    }
+
+    fun animStop(player: Player) = withSession(player) { s ->
+        plugin.animation.stop(s)
+        plugin.texts.send(player, "anim.stopped")
+    }
+
+    fun animClear(player: Player) = withSession(player) { s ->
+        plugin.animation.stop(s)
+        s.scene.animation = null
+        s.dirty = true
+        plugin.texts.send(player, "anim.cleared")
+    }
+
+    // --- presets (one-click, for non-artists) ---
+
+    fun applyPose(player: Player, presetId: String) = withSession(player) { s ->
+        val el = s.selected()
+        if (el !is ArmorStandElement) return@withSession plugin.texts.send(player, "preset.only-stand")
+        val preset = plugin.presets.pose(presetId) ?: return@withSession plugin.texts.send(player, "preset.pose-missing", "id" to presetId)
+        el.pose = preset.pose
+        preset.arms?.let { el.flags.arms = it }
+        s.entities[el.localId]?.let { plugin.placement.apply(it, el) }
+        s.dirty = true
+        plugin.texts.send(player, "preset.pose-applied", "name" to preset.name)
+    }
+
+    fun applyFx(player: Player, presetId: String) = withSession(player) { s ->
+        val preset = plugin.presets.fx(presetId) ?: return@withSession plugin.texts.send(player, "preset.fx-missing", "id" to presetId)
+        if (!checkAddAllowed(player, s)) return@withSession
+        val origin = ensureOrigin(s, player)
+        // Centre the effect on the selected element if there is one, else on the player.
+        val base = s.selected()?.offset ?: offsetOf(player, origin)
+        for (t in preset.emitters) {
+            val emitter = ParticleEmitter(
+                id = s.scene.nextEmitterId(), particle = t.particle,
+                offset = Vec3(base.x + t.offset.x, base.y + t.offset.y, base.z + t.offset.z),
+                count = t.count, spread = t.spread, speed = t.speed, rateTicks = t.rate,
+            )
+            s.scene.emitters += emitter
+            plugin.particles.spawnEmitter(origin, s.scene.id, player.uniqueId, emitter)
+        }
+        s.dirty = true
+        plugin.texts.send(player, "preset.fx-applied", "name" to preset.name)
+    }
+
+    /** Make the pose symmetric by mirroring the left arm/leg onto the right (or vice versa). */
+    fun mirrorPose(player: Player) = withSession(player) { s ->
+        val el = s.selected()
+        if (el !is ArmorStandElement) return@withSession plugin.texts.send(player, "preset.only-stand")
+        val p = el.pose
+        el.pose = p.copy(
+            rightArm = p.leftArm.copy(y = -p.leftArm.y, z = -p.leftArm.z),
+            rightLeg = p.leftLeg.copy(y = -p.leftLeg.y, z = -p.leftLeg.z),
+        )
+        s.entities[el.localId]?.let { plugin.placement.apply(it, el) }
+        s.dirty = true
+        plugin.texts.send(player, "preset.mirrored")
+    }
+
+    /** Save the selected armor stand's current pose into presets.yml so it can be reused. */
+    fun savePose(player: Player, id: String, name: String?) = withSession(player) { s ->
+        val el = s.selected()
+        if (el !is ArmorStandElement) return@withSession plugin.texts.send(player, "preset.only-stand")
+        val file = File(plugin.dataFolder, "presets.yml")
+        val cfg = YamlConfiguration.loadConfiguration(file)
+        val list = cfg.getMapList("poses").toMutableList()
+        list.removeIf { it["id"]?.toString() == id }
+        fun deg(e: com.tinyyana.awesomeArmorStandEditor.model.EulerXYZ) = listOf(
+            round1(Math.toDegrees(e.x)), round1(Math.toDegrees(e.y)), round1(Math.toDegrees(e.z)),
+        )
+        list += linkedMapOf(
+            "id" to id, "name" to (name ?: id), "icon" to "ARMOR_STAND", "arms" to el.flags.arms,
+            "head" to deg(el.pose.head), "body" to deg(el.pose.body),
+            "left-arm" to deg(el.pose.leftArm), "right-arm" to deg(el.pose.rightArm),
+            "left-leg" to deg(el.pose.leftLeg), "right-leg" to deg(el.pose.rightLeg),
+        )
+        cfg.set("poses", list)
+        cfg.save(file)
+        plugin.presets.reload(plugin)
+        plugin.texts.send(player, "preset.pose-saved", "id" to id)
+    }
+
+    private fun round1(v: Double): Double = Math.round(v * 10.0) / 10.0
+
+    // --- readout ---
+
+    fun readout(player: Player, session: EditSession) {
+        val element = session.selected()
+        if (element == null) {
+            plugin.texts.actionbarRaw(player, "<gray>未選取元件 · 右鍵點擊元件以選取")
+            return
+        }
+        val type = if (element is ArmorStandElement) "盔甲座" else "Display"
+        val stepStr = formatStep(session)
+        val detail = valueReadout(session, element)
+        plugin.texts.actionbarRaw(
+            player,
+            "<gray>$type<white>#${element.localId} <dark_gray>| <aqua>${modeLabel(session.mode)}" +
+                partLabel(session, element) +
+                " <dark_gray>| 軸 <yellow>${session.axis.name}" +
+                " <dark_gray>| 步進 <green>$stepStr" +
+                (if (detail.isNotEmpty()) " <dark_gray>| <gray>$detail" else ""),
+        )
+    }
+
+    private fun modeLabel(mode: EditMode) = when (mode) {
+        EditMode.MOVE -> "移動"; EditMode.POSE -> "姿勢"; EditMode.TRANSLATE -> "平移"
+        EditMode.ROTATE -> "旋轉"; EditMode.SCALE -> "縮放"
+    }
+
+    private fun partLabel(session: EditSession, element: Element): String =
+        if (element is ArmorStandElement && session.mode == EditMode.POSE) " <white>${session.part.display}" else ""
+
+    private fun valueReadout(session: EditSession, element: Element): String = when {
+        element is ArmorStandElement && session.mode == EditMode.POSE -> {
+            val e = PoseOps.getPart(element.pose, session.part)
+            "%.0f°".format(Locale.ROOT, PoseOps.axisValueDeg(e, session.axis))
+        }
+        session.mode == EditMode.MOVE -> {
+            val o = element.offset
+            "off %.2f/%.2f/%.2f".format(Locale.ROOT, o.x, o.y, o.z)
+        }
+        element is DisplayElement && session.mode == EditMode.SCALE -> {
+            val s = element.transform.scale
+            "scale %.2f/%.2f/%.2f".format(Locale.ROOT, s.x, s.y, s.z)
+        }
+        element is DisplayElement && session.mode == EditMode.TRANSLATE -> {
+            val t = element.transform.translation
+            "t %.2f/%.2f/%.2f".format(Locale.ROOT, t.x, t.y, t.z)
+        }
+        else -> ""
+    }
+
+    // --- helpers ---
+
+    private enum class StepFamily { ROTATION, TRANSLATE, SCALE }
+
+    private fun currentStepFamily(session: EditSession): StepFamily = when (session.mode) {
+        EditMode.POSE, EditMode.ROTATE -> StepFamily.ROTATION
+        EditMode.MOVE, EditMode.TRANSLATE -> StepFamily.TRANSLATE
+        EditMode.SCALE -> StepFamily.SCALE
+    }
+
+    private fun currentStep(session: EditSession): Double {
+        val s = plugin.settings
+        return when (currentStepFamily(session)) {
+            StepFamily.ROTATION -> pick(s.rotationStepsDeg, session.rotStepIndex)
+            StepFamily.TRANSLATE -> pick(s.translateSteps, session.transStepIndex)
+            StepFamily.SCALE -> pick(s.scaleSteps, session.scaleStepIndex)
+        }
+    }
+
+    private fun formatStep(session: EditSession): String {
+        val v = currentStep(session)
+        return if (currentStepFamily(session) == StepFamily.ROTATION) "%.0f°".format(Locale.ROOT, v)
+        else "%.2f".format(Locale.ROOT, v)
+    }
+
+    private fun pick(list: List<Double>, index: Int): Double = list[index.mod(list.size)]
+
+    private fun checkAddAllowed(player: Player, session: EditSession): Boolean {
+        val s = plugin.settings
+        if (!player.hasPermission("aase.bypass.limit")) {
+            if (plugin.registry.ownerCount(player.uniqueId) >= s.limitPerPlayer) {
+                plugin.texts.send(player, "limit.per-player", "max" to s.limitPerPlayer.toString()); return false
+            }
+            if (plugin.registry.total() >= s.limitGlobal) {
+                plugin.texts.send(player, "limit.global"); return false
+            }
+            if (plugin.registry.countInChunk(player.location.chunk) >= s.limitPerChunk) {
+                plugin.texts.send(player, "limit.per-chunk", "max" to s.limitPerChunk.toString()); return false
+            }
+        }
+        if (!player.hasPermission("aase.bypass.region") && !plugin.guard.canBuild(player, player.location)) {
+            plugin.texts.send(player, "region.denied"); return false
+        }
+        return true
+    }
+
+    private fun ensureOrigin(session: EditSession, player: Player) =
+        session.origin ?: player.location.clone().also { session.origin = it }
+
+    private fun offsetOf(player: Player, origin: org.bukkit.Location): Vec3 {
+        val l = player.location
+        return Vec3(l.x - origin.x, l.y - origin.y, l.z - origin.z)
+    }
+
+    private inline fun withSession(player: Player, block: (EditSession) -> Unit) {
+        val s = plugin.sessions.get(player.uniqueId) ?: return noSession(player)
+        block(s)
+    }
+
+    private fun noSession(player: Player) = plugin.texts.send(player, "session.none")
+}
