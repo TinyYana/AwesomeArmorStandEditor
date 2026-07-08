@@ -24,7 +24,8 @@ object SummonExporter {
         scene.elements.joinToString("\n") { line(it, tagPrefix) }
 
     private fun line(el: Element, tagPrefix: String?): String {
-        val (dx, dy, dz) = Triple(f(el.offset.x), f(el.offset.y), f(el.offset.z))
+        // Coordinates are NOT NBT floats — they must have no 'f' suffix (~0f is a parse error).
+        val (dx, dy, dz) = Triple(coord(el.offset.x), coord(el.offset.y), coord(el.offset.z))
         val tag = tagPrefix?.let { "$it${el.localId}" }
         return when (el) {
             is ArmorStandElement -> "/summon minecraft:armor_stand ~$dx ~$dy ~$dz ${armorStandNbt(el, tag)}"
@@ -111,12 +112,15 @@ object SummonExporter {
 
     private fun b(v: Boolean) = if (v) "1b" else "0b"
 
-    private fun f(v: Double): String {
-        val s = String.format(Locale.ROOT, "%.4f", v).let {
-            if (it.contains('.')) it.trimEnd('0').trimEnd('.') else it
-        }
-        return "${s}f"
-    }
+    /** Trimmed plain number, e.g. 0.0 -> "0", 0.5 -> "0.5". */
+    private fun num(v: Double): String =
+        String.format(Locale.ROOT, "%.4f", v).let { if (it.contains('.')) it.trimEnd('0').trimEnd('.') else it }
+
+    /** NBT float literal (needs the 'f' suffix): Pose, Rotation, transformation, view_range. */
+    private fun f(v: Double): String = "${num(v)}f"
+
+    /** Command coordinate (no 'f' suffix) — used after `~`. */
+    private fun coord(v: Double): String = num(v)
 
     private fun deg(rad: Double) = f(Math.toDegrees(rad))
 

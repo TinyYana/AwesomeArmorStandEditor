@@ -110,15 +110,26 @@ class EditorLogicTest {
     }
 
     @Test
-    fun summonExporterUsesSnbtText() {
-        // MC 26.2 text components are SNBT; the old JSON-string form is stored literally (a bug).
+    fun summonExporterFormat() {
         val scene = Scene(id = "e", owner = "00000000-0000-0000-0000-000000000003", name = "x")
-        scene.elements += ArmorStandElement(localId = 1, customName = "<red>守衛")
+        scene.elements += ArmorStandElement(
+            localId = 1, offset = Vec3(1.5, 0.0, -2.0), yaw = 45f,
+            pose = Pose6(head = EulerXYZ(0.1, 0.0, 0.0)), customName = "<red>守衛",
+        )
         scene.elements += DisplayElement(localId = 2, kind = DisplayKind.TEXT, payload = "哈囉")
         val out = SummonExporter.export(scene)
+
+        // Text components must be SNBT, never the legacy JSON-string form (stored literally in 26.2).
         assertTrue(out.contains("CustomName:\"守衛\""), out)
         assertTrue(out.contains("text:\"哈囉\""), out)
-        assertFalse(out.contains("{\"text\":"), out) // never the legacy JSON-string form
+        assertFalse(out.contains("{\"text\":"), out)
+
+        // Coordinates must NOT carry an 'f' suffix (~0f is a parse error); NBT floats still do.
+        assertTrue(out.contains("~1.5 ~0 ~-2"), out)
+        assertFalse(Regex("~-?[0-9.]+f").containsMatchIn(out), "coordinate has an 'f' suffix: $out")
+
+        // Capture the real output so it can be run against a live server (build/ is gitignored).
+        java.io.File("build/export-sample.txt").writeText(out)
     }
 
     @Test
