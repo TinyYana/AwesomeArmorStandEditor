@@ -52,7 +52,7 @@ object SummonExporter {
             "Pose:${poseNbt(el.pose)}",
         )
         armorItemsNbt(el)?.let { tags += it }
-        el.customName?.takeIf { it.isNotBlank() }?.let { tags += "CustomName:'${jsonText(plain(it))}'" }
+        el.customName?.takeIf { it.isNotBlank() }?.let { tags += "CustomName:${snbt(plain(it))}" }
         tag?.let { tags += "Tags:[\"$it\"]" }
         return "{${tags.joinToString(",")}}"
     }
@@ -94,7 +94,7 @@ object SummonExporter {
                 tags += "item:{id:\"${it.type.key}\",count:${it.amount.coerceAtLeast(1)}}"
             }
             DisplayKind.BLOCK -> tags += "block_state:{Name:\"${blockName(el.payload)}\"}"
-            DisplayKind.TEXT -> tags += "text:'${jsonText(plain(el.payload))}'"
+            DisplayKind.TEXT -> tags += "text:${snbt(plain(el.payload))}"
         }
         tag?.let { tags += "Tags:[\"$it\"]" }
         return "{${tags.joinToString(",")}}"
@@ -126,5 +126,10 @@ object SummonExporter {
     /** MiniMessage/section text -> plain text for NBT (formatting dropped in export). */
     private fun plain(s: String): String = s.replace(Regex("<[^>]*>"), "").replace(Regex("§."), "")
 
-    private fun jsonText(text: String): String = "{\"text\":\"${text.replace("\\", "\\\\").replace("\"", "\\\"")}\"}"
+    /**
+     * SNBT double-quoted string. In MC 26.2 text components (CustomName, text_display text) are
+     * SNBT — a bare quoted string is plain text. The old JSON-string form '{"text":"..."}' is
+     * stored literally (verified via /summon on 26.2), so we must NOT use it.
+     */
+    private fun snbt(text: String): String = "\"${text.replace("\\", "\\\\").replace("\"", "\\\"")}\""
 }

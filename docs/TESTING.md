@@ -84,7 +84,7 @@ Spigot 相容性:編譯只用 Bukkit/Spigot API 面,Adventure 以 shade+relocate
 
 ## 已知限制
 
-- summon / mcfunction 匯出為最佳努力:裝備只帶物品 id(不含附魔/自訂資料);方塊只帶方塊名(不含 blockstate 屬性);自訂名轉純文字。26.2 NBT 格式若有變,`SummonExporter` / `McFunctionExporter` 是集中修改點。
+- summon / mcfunction 匯出:**NBT 格式已對 Paper 26.2 用 RCON `/summon` 實測**(Pose/旗標/裝備 ArmorItems+HandItems/transformation/item/block/brightness/glow 皆正確;自訂名與文字用 **SNBT** `CustomName:"..."` / `text:"..."`,不是舊的 JSON 字串)。仍為最佳努力:裝備只帶物品 id(不含附魔/自訂資料);方塊只帶方塊名(不含 blockstate 屬性);名稱/文字轉純文字(顏色不保留)。若未來版本再變,`SummonExporter` / `McFunctionExporter` 是集中修改點。
 - 動畫即時播放僅在編輯 session 內(播放中盔甲座逐 tick 有成本,故不常駐);要常駐播放請用匯出的 datapack。
 - 粒子發射器位置目前是玩家加入時的站位(offset),尚無視覺化搬移(可刪除重加);編輯只有 add/clear。
 - 裝備編輯用 `/aase setequip <欄位>`(副手物品),尚無拖放式裝備 GUI。

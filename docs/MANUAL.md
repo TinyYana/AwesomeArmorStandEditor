@@ -254,7 +254,7 @@ data/aase/function/frames/frame_*.mcfunction
 - 靜態:`/function aase:summon`
 - 動畫:`/function aase:load` → `/function aase:summon` → `/function aase:tick`
 
-> **最佳努力**:pack_format 與 `function` 資料夾名稱依 MC 版本可能要調整;裝備只帶物品 id、方塊只帶方塊名。`SummonExporter` / `McFunctionExporter` 是集中修改點。
+> **NBT 已對 26.2 實測**:姿勢/旗標/裝備/變換/物品/方塊/亮度/發光皆正確;自訂名與文字用 SNBT(`CustomName:"名字"`、`text:"文字"`,不是舊版 JSON 字串)。仍為最佳努力:pack_format 與 `function` 資料夾名稱依版本可能要調;裝備只帶物品 id、方塊只帶方塊名、名稱/文字不保留顏色。`SummonExporter` / `McFunctionExporter` 是集中修改點。
 
 ## 15. 指令總表
 

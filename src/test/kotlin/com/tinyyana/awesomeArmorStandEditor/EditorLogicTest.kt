@@ -21,10 +21,12 @@ import com.tinyyana.awesomeArmorStandEditor.model.Scene
 import com.tinyyana.awesomeArmorStandEditor.model.Track
 import com.tinyyana.awesomeArmorStandEditor.model.Transform
 import com.tinyyana.awesomeArmorStandEditor.model.Vec3
+import com.tinyyana.awesomeArmorStandEditor.export.SummonExporter
 import com.tinyyana.awesomeArmorStandEditor.store.SceneCodec
 import kotlin.math.PI
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -105,6 +107,18 @@ class EditorLogicTest {
         assertEquals(1.0, mid.pose!!.head.y, 1e-9)  // halfway between 0 and 2
         // clamps outside range
         assertEquals(2.0, InterpolationOps.sample(kfs, 99).pose!!.head.y, 1e-9)
+    }
+
+    @Test
+    fun summonExporterUsesSnbtText() {
+        // MC 26.2 text components are SNBT; the old JSON-string form is stored literally (a bug).
+        val scene = Scene(id = "e", owner = "00000000-0000-0000-0000-000000000003", name = "x")
+        scene.elements += ArmorStandElement(localId = 1, customName = "<red>守衛")
+        scene.elements += DisplayElement(localId = 2, kind = DisplayKind.TEXT, payload = "哈囉")
+        val out = SummonExporter.export(scene)
+        assertTrue(out.contains("CustomName:\"守衛\""), out)
+        assertTrue(out.contains("text:\"哈囉\""), out)
+        assertFalse(out.contains("{\"text\":"), out) // never the legacy JSON-string form
     }
 
     @Test
