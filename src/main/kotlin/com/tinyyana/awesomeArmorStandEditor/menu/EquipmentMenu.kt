@@ -7,6 +7,7 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.inventory.InventoryAction
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryDragEvent
 import org.bukkit.inventory.Inventory
@@ -45,24 +46,35 @@ class EquipmentMenu(private val plugin: AwesomeArmorStandEditorPlugin) : Listene
     fun onClick(event: InventoryClickEvent) {
         val holder = event.inventory.holder
         if (holder !is Holder) return
-        event.isCancelled = true                     // nothing ever moves in or out
         val player = event.whoClicked as? Player ?: return
-        if (event.clickedInventory !== event.inventory) return  // clicks in the player's own inv: just blocked
+        val menu = event.view.topInventory
 
-        val slot = event.rawSlot
-        if (slot == SLOT_BACK) { plugin.panel.open(player); return }
-        val key = SLOTS[slot] ?: return
+        if (event.clickedInventory === menu) {
+            // Clicks inside the menu are ours — we never let a real item move here, only copy the cursor.
+            event.isCancelled = true
+            val slot = event.rawSlot
+            if (slot == SLOT_BACK) { plugin.panel.open(player); return }
+            val key = SLOTS[slot] ?: return
+            val toSet = event.cursor?.takeIf { !it.type.isAir }?.clone()
+            controller.setEquipItem(player, key, toSet)  // empty cursor clears the slot
+            populate(player, menu)
+            return
+        }
 
-        val cursor = event.cursor
-        val toSet = cursor?.takeIf { !it.type.isAir }?.clone()
-        controller.setEquipItem(player, key, toSet)  // null cursor clears the slot
-        populate(player, event.inventory)
+        // In the player's own inventory: allow normal pickup so they can put an item on the cursor,
+        // but block anything that would shove items into the menu (shift-move / double-click collect).
+        when (event.action) {
+            InventoryAction.MOVE_TO_OTHER_INVENTORY, InventoryAction.COLLECT_TO_CURSOR -> event.isCancelled = true
+            else -> {}
+        }
     }
 
-    /** Cancel drags so a click-drag can't dump items into the menu. */
+    /** Cancel only drags that touch the menu; drags within the player's own inventory are fine. */
     @EventHandler
     fun onDrag(event: InventoryDragEvent) {
-        if (event.inventory.holder is Holder) event.isCancelled = true
+        if (event.inventory.holder !is Holder) return
+        val menuSize = event.view.topInventory.size
+        if (event.rawSlots.any { it < menuSize }) event.isCancelled = true
     }
 
     private fun populate(player: Player, inv: Inventory) {

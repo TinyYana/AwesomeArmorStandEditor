@@ -74,17 +74,17 @@ equip:
   hint: "<yellow>把物品拿在副手,執行 <aqua>/aase setequip <head|chest|legs|feet|mainhand|offhand>"
 
 equip-menu:
-  title: "裝備 · 手持物品點格子裝上"
+  title: "裝備 · 先拿起物品再點格子"
   only-stand: "<red>先右鍵選一個盔甲座,才能開裝備選單"
-  info: "<gold>手持物品點格子=裝上 · 空手點=卸下(不會消耗你的物品)"
+  info: "<gold>用法:在下面背包點一下物品(拿到游標)→ 再點裝備格子=裝上;游標空著點格子=卸下。不會消耗你的物品"
   head: "<white>頭盔"
   chest: "<white>胸甲"
   legs: "<white>護腿"
   feet: "<white>靴子"
   mainhand: "<white>主手"
   offhand: "<white>副手"
-  empty-hint: "<gray>手持物品點這裡裝上"
-  filled-hint: "<gray>手持物品=更換 · 空手=卸下"
+  empty-hint: "<gray>先在背包拿起物品到游標,再點這裡裝上"
+  filled-hint: "<gray>游標拿著物品點=更換 · 游標空著點=卸下"
   back: "<yellow>← 回控制面板"
 
 flag:
