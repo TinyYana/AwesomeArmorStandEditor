@@ -105,6 +105,7 @@ Share code format: `ShareCode.encode(scene)` = `AASE1:` + URL-safe Base64(gzip(J
 - [`docs/DESIGN.md`](docs/DESIGN.md) — architecture, data model, roadmap, performance & safety guardrails.
 - [`docs/MANUAL.en.md`](docs/MANUAL.en.md) / [`docs/MANUAL.md`](docs/MANUAL.md) — the full user manual (English / 繁體中文).
 - [`docs/TESTING.md`](docs/TESTING.md) — test steps (admin / player perspective).
+- [`CHANGELOG.md`](CHANGELOG.md) — detailed release notes.
 
 ---
 
@@ -200,3 +201,4 @@ Share code format: `ShareCode.encode(scene)` = `AASE1:` + URL-safe Base64(gzip(J
 - [`docs/DESIGN.md`](docs/DESIGN.md) — 架構、資料模型、路線圖、效能與安全紅線。
 - [`docs/MANUAL.md`](docs/MANUAL.md) / [`docs/MANUAL.en.md`](docs/MANUAL.en.md) — 完整使用說明手冊(繁體中文 / English)。
 - [`docs/TESTING.md`](docs/TESTING.md) — 測試步驟(管理員 / 玩家視角)。
+- [`CHANGELOG.md`](CHANGELOG.md) — 詳細版本變更紀錄。
