@@ -11,25 +11,31 @@ on:
 permissions:
   contents: write
 
+# Action 版本說明:以下每一顆都取「第一個真正跑在 Node 24 的 major」,不是最新 major。
+# GitHub 已停止在 runner 上支援 Node 20(舊版會被強制降轉並印 deprecation 警告)。
+#   upload-artifact 要 v6(v5 只是「預備支援」Node 24,預設仍跑 Node 20)
+#   download-artifact 要 v7(同上,v6 預設仍是 Node 20)
+# 刻意不用 upload@v7 / download@v8:那兩個另外引入 ESM、direct upload 與強制 hash 檢查等行為改變,
+# 對這個 workflow 沒有好處。全部 major 的唯一硬性需求是 runner >= 2.327.1(ubuntu-latest 已滿足)。
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '25'
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
 
       - name: Build (compile + unit tests + shaded jar)
         run: |
           chmod +x gradlew
           ./gradlew build
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: AwesomeArmorStandEditor-jar
           path: |
@@ -42,9 +48,9 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: AwesomeArmorStandEditor-jar
           path: build/libs
@@ -60,7 +66,7 @@ jobs:
             echo "_No CHANGELOG.md section found for ${GITHUB_REF_NAME} — see commit history._" > release-notes.md
           fi
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           files: build/libs/*.jar
           body_path: release-notes.md

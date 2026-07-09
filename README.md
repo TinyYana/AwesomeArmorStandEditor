@@ -29,6 +29,7 @@ Pose armor stands and item/block/text displays with a hybrid GUI + in-world tool
 - **Save / share / export**: every scene is a portable JSON blueprint you can place multiple times; `/aase share` produces a **share code** (gzip+Base64, safe to paste in chat) — the recipient runs `/aase import` to get the same build; export a `/summon` command (one-click copy) or a full **mcfunction datapack** (animation-driven).
 - **Equipment menu**: `/aase equip` opens a graphical equipment GUI — click a hotbar/inventory item onto a slot to equip it, click with an empty cursor to unequip — **your items are never consumed or lost**.
 - **Survival-safe**: element ownership tags (anti-griefing), per-player / per-chunk / global element caps, region-protection awareness; **anything that writes to server files (export, saving to the shared preset library) is admin/builder-only by default** (see [Permissions](#permissions)).
+- **Moderation tools**: someone dumped a build somewhere stupid? `/aase admin whois` says who placed it, `/aase admin remove` clears it, and `/aase admin purge <radius> [player]` previews a bulk cleanup that only runs after an explicit `confirm`. It **only ever touches elements this plugin placed** (hand-placed vanilla armor stands are never removed) and **never deletes the owner's saved scene**.
 - **Zero hard dependencies, cross-platform**: runs on both Spigot and Paper; no other plugin required.
 
 ### Compatibility
@@ -63,6 +64,8 @@ Drop `AwesomeArmorStandEditor-<version>.jar` into your server's `plugins/` folde
 | `/aase edit` | Bind to and edit an existing nearby build (no duplicate is created) |
 | `/aase share` · `/aase import <code> [name]` | Generate a share code / import someone else's |
 | `/aase export command` · `/aase export function` | Export a summon command / mcfunction datapack (**writes server files, admin/builder-only by default**) |
+| `/aase admin whois` · `/aase admin remove` | Who placed the nearest element / remove it (**admin-only**) |
+| `/aase admin purge <radius> [player]` · `/aase admin confirm` | Preview a bulk cleanup, then confirm it (**admin-only**) |
 | `/aase reload` | Reload configuration (admin) |
 
 ### Editing tool
@@ -77,9 +80,19 @@ Granted to every player by default (`default: true`): `aase.use`, `aase.create.a
 
 - `aase.export.command` — export summon commands / mcfunction datapacks (writes into `plugins/`).
 - `aase.preset.save` — `/aase pose save` writes into the **server-wide shared** `presets.yml`.
-- `aase.admin`, `aase.bypass.region`, `aase.bypass.limit`.
+- `aase.admin` — `/aase admin whois|remove|purge`, editing other players' builds, `/aase reload`.
+- `aase.bypass.region`, `aase.bypass.limit`.
 
 See `plugin.yml` for the full list; adjust freely with a permissions plugin like LuckPerms.
+
+#### Moderation (`/aase admin`)
+
+Deliberate boundaries — this is not a general entity remover:
+
+- **Only touches elements this plugin placed.** Hand-placed vanilla armor stands and other plugins' entities are never removed; `whois` says so explicitly.
+- **Only reaches loaded chunks.** The plugin never scans the world, so a purge cannot reach art in chunks nobody has loaded.
+- **Never deletes the owner's saved scene** — a purge removes placed entities only, so the owner can re-place their build somewhere sensible.
+- **Radius purge is two-stage** (preview → `confirm` within 60s) and the radius is clamped by `admin.max-purge-radius` (default `64`).
 
 ### API for developers
 
@@ -129,6 +142,7 @@ Share code format: `ShareCode.encode(scene)` = `AASE1:` + URL-safe Base64(gzip(J
 - **存檔 / 分享 / 匯出**:每個場景是可攜的 JSON 藍圖,可重複放置;`/aase share` 產生一串**分享碼**(gzip+Base64,可在聊天貼給別人),對方 `/aase import` 一鍵拿到同一份作品;匯出 `/summon` 指令(一鍵複製)或 **mcfunction 資料包**(含動畫驅動)。
 - **裝備選單**:`/aase equip` 開圖形裝備欄,手持物品點格子就穿上、空手點就卸下 —— **不會消耗或弄丟你的物品**。
 - **生存服安全**:元件擁有權標記(反格里芬)、每人/每區塊/全域數量上限、尊重領地保護;**寫入伺服器檔案的功能(匯出、存進共用範本庫)預設只開放給管理員/建築師**(見權限)。
+- **管理員工具**:有人把作品放在奇怪的地方?`/aase admin whois` 查是誰放的、`/aase admin remove` 移除、`/aase admin purge <半徑> [玩家]` 先預覽再 `confirm` 才批次清除。**只碰本外掛放置的元件**(玩家手放的原版盔甲座不動),而且**不刪玩家的存檔**。
 - **零硬依賴、跨平台**:在 Spigot 與 Paper 都能跑;不需要安裝任何其他外掛。
 
 ### 相容性
@@ -163,6 +177,8 @@ Share code format: `ShareCode.encode(scene)` = `AASE1:` + URL-safe Base64(gzip(J
 | `/aase edit` | 綁定並編輯附近既有作品(不產生分身) |
 | `/aase share` · `/aase import <碼> [名稱]` | 產生分享碼 / 匯入別人的分享碼 |
 | `/aase export command` · `/aase export function` | 匯出 summon 指令 / mcfunction 資料包(**寫入伺服器檔案,預設限管理員/建築師**) |
+| `/aase admin whois` · `/aase admin remove` | 查最近元件是誰放的 / 移除它(**限管理員**) |
+| `/aase admin purge <半徑> [玩家]` · `/aase admin confirm` | 預覽批次清除,再確認執行(**限管理員**) |
 | `/aase reload` | 重載設定(管理) |
 
 ### 編輯工具
@@ -177,9 +193,19 @@ Share code format: `ShareCode.encode(scene)` = `AASE1:` + URL-safe Base64(gzip(J
 
 - `aase.export.command` —— 匯出 summon 指令 / mcfunction 資料包(寫進 `plugins/` 資料夾)。
 - `aase.preset.save` —— `/aase pose save` 把姿勢存進**全服共用**的 `presets.yml`。
-- `aase.admin`、`aase.bypass.region`、`aase.bypass.limit`。
+- `aase.admin` —— `/aase admin whois|remove|purge`、編輯他人作品、`/aase reload`。
+- `aase.bypass.region`、`aase.bypass.limit`。
 
 詳見 `plugin.yml`;用 LuckPerms 等權限外掛可自由調整。
+
+#### 管理員工具(`/aase admin`)
+
+刻意的邊界 —— 它不是通用的實體清除器:
+
+- **只碰本外掛放置的元件。** 玩家手放的原版盔甲座、其他外掛生成的實體一律不動;`whois` 找不到時會直說。
+- **只碰已載入區塊。** 本外掛不掃描世界,所以清除到不了沒人載入的區塊。
+- **不刪玩家的存檔。** purge 只清世界上的實體,玩家可以把作品重新放到合理的位置。
+- **半徑清除為兩段式**(預覽 → 60 秒內 `confirm`),半徑由 `admin.max-purge-radius`(預設 `64`)夾住。
 
 ### 給開發者(API)
 
