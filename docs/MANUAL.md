@@ -2,6 +2,7 @@
 
 > 巨詳細版。遊戲內有精簡的翻頁書(`/aase guide`);這份是完整參考。
 > 目標讀者:從「完全不會擺姿勢」到「想做動畫、想匯出資料包」的所有人。
+> English version: [`MANUAL.en.md`](MANUAL.en.md)。
 
 ---
 
@@ -72,7 +73,11 @@ plugins/AwesomeArmorStandEditor/
 - **擁有權**:每個元件記著是誰做的。你只能編輯自己的;別人打不壞、拿不走你的作品。
 - **會留在世界**:放好的作品是真的實體,會一直在(像真的盔甲座)。要繼續編輯用 `/aase edit` 站旁邊重新綁定,不會產生分身。
 
+![場景、元件與放置](assets/concepts.svg)
+
 ## 4. 五分鐘上手(不用會美術)
+
+![五分鐘上手](assets/quickstart-flow.svg)
 
 ```
 /aase new 我的作品      ← 開一個新場景
@@ -114,6 +119,8 @@ plugins/AwesomeArmorStandEditor/
 | **潛行 + 左鍵** | 切換模式(姿勢 / 移動 / 平移 / 旋轉 / 縮放) |
 | **潛行 + 右鍵** | 切換部位(頭 / 身 / 左右臂 / 左右腿,盔甲座姿勢用) |
 
+![編輯工具速查](assets/tool-controls.svg)
+
 畫面下方(actionbar)會即時顯示:`盔甲座#1 | 姿勢頭 | 軸 Y | 步進 15° | Y=+45°`。
 
 > 小提醒:有場景在編輯時,滾輪被拿去當「換步進/換軸」。想正常換物品欄,先 `/aase close` 結束編輯,或把工具丟掉。
@@ -127,6 +134,8 @@ plugins/AwesomeArmorStandEditor/
 ## 7. 控制面板 GUI
 
 `/aase` 打開控制面板。不想背指令的話,這裡幾乎所有事都能點:
+
+![控制面板配置](assets/gui-layout.svg)
 
 - **上排**:資訊、右上角📖手冊、新增盔甲座 / 物品 / 方塊 / 文字 Display
 - **模式列**:移動 / 姿勢 / 平移 / 旋轉 / 縮放(目前選中的會標記)

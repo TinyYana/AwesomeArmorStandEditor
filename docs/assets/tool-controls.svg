@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 480" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect x="0" y="0" width="1000" height="480" rx="14" fill="#f4ecd8" stroke="#8a7550" stroke-width="2"/>
+  <text x="30" y="38" font-size="20" font-weight="700" fill="#3b2f22">Edit Tool Cheat Sheet · 編輯工具速查</text>
+  <text x="30" y="60" font-size="13" fill="#6b5a3e">/aase tool — hold it while a scene session is open · 有場景進行中時拿著工具操作</text>
+
+  <!-- center tool icon -->
+  <g transform="translate(430,90)">
+    <rect x="0" y="0" width="140" height="300" rx="16" fill="#3b2f22"/>
+    <rect x="10" y="10" width="120" height="120" rx="10" fill="#c9962c"/>
+    <text x="70" y="80" font-size="42" text-anchor="middle" fill="#3b2f22">🔥</text>
+    <text x="70" y="150" font-size="13" fill="#f4ecd8" text-anchor="middle">Editing</text>
+    <text x="70" y="168" font-size="13" fill="#f4ecd8" text-anchor="middle">Tool</text>
+    <text x="70" y="200" font-size="12" fill="#d8c9a3" text-anchor="middle">編輯工具</text>
+    <text x="70" y="260" font-size="11" fill="#d8c9a3" text-anchor="middle">(blaze rod,</text>
+    <text x="70" y="278" font-size="11" fill="#d8c9a3" text-anchor="middle">configurable)</text>
+  </g>
+
+  <!-- six callouts around the tool -->
+  <!-- top-left: right-click select -->
+  <g>
+    <rect x="30" y="90" width="360" height="60" rx="8" fill="#ffffff" stroke="#c9b183"/>
+    <text x="46" y="112" font-size="13" font-weight="700" fill="#3b2f22">Right-click element 右鍵點元件</text>
+    <text x="46" y="132" font-size="12" fill="#6b5a3e">Select it (must select before editing) 選取它</text>
+    <line x1="390" y1="120" x2="428" y2="120" stroke="#8a7550" stroke-width="2"/>
+  </g>
+
+  <!-- left-mid: left/right click axis -->
+  <g>
+    <rect x="30" y="160" width="360" height="60" rx="8" fill="#ffffff" stroke="#c9b183"/>
+    <text x="46" y="182" font-size="13" font-weight="700" fill="#3b2f22">Left / Right click 左鍵 / 右鍵</text>
+    <text x="46" y="202" font-size="12" fill="#6b5a3e">Current axis −1 step / +1 step 目前軸 −／＋一個步進</text>
+    <line x1="390" y1="190" x2="428" y2="190" stroke="#8a7550" stroke-width="2"/>
+  </g>
+
+  <!-- left-bottom: scroll step -->
+  <g>
+    <rect x="30" y="230" width="360" height="60" rx="8" fill="#ffffff" stroke="#c9b183"/>
+    <text x="46" y="252" font-size="13" font-weight="700" fill="#3b2f22">Scroll wheel 滾輪</text>
+    <text x="46" y="272" font-size="12" fill="#6b5a3e">Cycle step size (1° / 15° / 45°…) 切換步進大小</text>
+    <line x1="390" y1="260" x2="428" y2="230" stroke="#8a7550" stroke-width="2"/>
+  </g>
+
+  <!-- bottom-left: sneak+scroll axis -->
+  <g>
+    <rect x="30" y="300" width="360" height="60" rx="8" fill="#ffffff" stroke="#c9b183"/>
+    <text x="46" y="322" font-size="13" font-weight="700" fill="#3b2f22">Sneak + Scroll 潛行＋滾輪</text>
+    <text x="46" y="342" font-size="12" fill="#6b5a3e">Switch axis X / Y / Z 切換軸</text>
+    <line x1="390" y1="330" x2="428" y2="260" stroke="#8a7550" stroke-width="2"/>
+  </g>
+
+  <!-- right-top: sneak+left mode -->
+  <g>
+    <rect x="610" y="90" width="360" height="60" rx="8" fill="#ffffff" stroke="#c9b183"/>
+    <text x="626" y="112" font-size="13" font-weight="700" fill="#3b2f22">Sneak + Left click 潛行＋左鍵</text>
+    <text x="626" y="132" font-size="12" fill="#6b5a3e">Switch mode: pose/move/translate/rotate/scale 切換模式</text>
+    <line x1="572" y1="120" x2="608" y2="120" stroke="#8a7550" stroke-width="2"/>
+  </g>
+
+  <!-- right-mid: sneak+right part -->
+  <g>
+    <rect x="610" y="160" width="360" height="60" rx="8" fill="#ffffff" stroke="#c9b183"/>
+    <text x="626" y="182" font-size="13" font-weight="700" fill="#3b2f22">Sneak + Right click 潛行＋右鍵</text>
+    <text x="626" y="202" font-size="12" fill="#6b5a3e">Switch body part: head/body/arms/legs 切換部位</text>
+    <line x1="572" y1="190" x2="608" y2="190" stroke="#8a7550" stroke-width="2"/>
+  </g>
+
+  <!-- actionbar readout -->
+  <g>
+    <rect x="610" y="230" width="360" height="90" rx="8" fill="#1f1a12" stroke="#c9962c"/>
+    <text x="626" y="252" font-size="12" fill="#c9962c" font-weight="700">Live actionbar readout 即時讀數</text>
+    <text x="626" y="278" font-size="12" fill="#f4ecd8" font-family="Consolas, monospace">Stand#1 | Head | Axis Y</text>
+    <text x="626" y="298" font-size="12" fill="#f4ecd8" font-family="Consolas, monospace">| Step 15° | Y=+45°</text>
+  </g>
+
+  <text x="30" y="410" font-size="12" fill="#6b5a3e">Modes: POSE (armor stand only) · MOVE (both) · TRANSLATE / ROTATE / SCALE (display entities only)</text>
+  <text x="30" y="430" font-size="12" fill="#6b5a3e">模式:姿勢(限盔甲座) · 移動(兩者皆可) · 平移／旋轉／縮放(限 Display)</text>
+  <text x="30" y="456" font-size="11.5" fill="#8a7550">Tip: while editing, the scroll wheel is repurposed for step/axis — run /aase close to get your hotbar scroll back.</text>
+</svg>

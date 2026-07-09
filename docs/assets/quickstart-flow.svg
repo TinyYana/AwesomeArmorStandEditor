@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 260" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8a7550"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1180" height="260" rx="14" fill="#f4ecd8" stroke="#8a7550" stroke-width="2"/>
+  <text x="30" y="38" font-size="20" font-weight="700" fill="#3b2f22">5-Minute Quick Start · 五分鐘上手</text>
+
+  <!-- step template: box + command chip + label -->
+  <g>
+    <!-- Step 1 -->
+    <rect x="30" y="70" width="200" height="130" rx="10" fill="#ffffff" stroke="#c9b183" stroke-width="1.5"/>
+    <circle cx="55" cy="95" r="14" fill="#4f8f6b"/>
+    <text x="55" y="100" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle">1</text>
+    <rect x="42" y="112" width="176" height="26" rx="6" fill="#3b2f22"/>
+    <text x="130" y="129" font-size="12.5" fill="#f4ecd8" text-anchor="middle" font-family="Consolas, monospace">/aase new &lt;name&gt;</text>
+    <text x="130" y="160" font-size="12.5" fill="#3b2f22" text-anchor="middle">Start a new scene</text>
+    <text x="130" y="178" font-size="12.5" fill="#6b5a3e" text-anchor="middle">開新場景</text>
+
+    <!-- Step 2 -->
+    <rect x="260" y="70" width="200" height="130" rx="10" fill="#ffffff" stroke="#c9b183" stroke-width="1.5"/>
+    <circle cx="285" cy="95" r="14" fill="#4f8f6b"/>
+    <text x="285" y="100" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle">2</text>
+    <rect x="272" y="112" width="176" height="26" rx="6" fill="#3b2f22"/>
+    <text x="360" y="129" font-size="12.5" fill="#f4ecd8" text-anchor="middle" font-family="Consolas, monospace">/aase addstand</text>
+    <text x="360" y="160" font-size="12.5" fill="#3b2f22" text-anchor="middle">Spawn an armor stand</text>
+    <text x="360" y="178" font-size="12.5" fill="#6b5a3e" text-anchor="middle">生一個盔甲座</text>
+
+    <!-- Step 3 -->
+    <rect x="490" y="70" width="200" height="130" rx="10" fill="#ffffff" stroke="#c9b183" stroke-width="1.5"/>
+    <circle cx="515" cy="95" r="14" fill="#4f8f6b"/>
+    <text x="515" y="100" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle">3</text>
+    <rect x="502" y="112" width="176" height="26" rx="6" fill="#3b2f22"/>
+    <text x="590" y="129" font-size="12.5" fill="#f4ecd8" text-anchor="middle" font-family="Consolas, monospace">right-click it</text>
+    <text x="590" y="160" font-size="12.5" fill="#3b2f22" text-anchor="middle">Select the element</text>
+    <text x="590" y="178" font-size="12.5" fill="#6b5a3e" text-anchor="middle">右鍵點它選取</text>
+
+    <!-- Step 4 -->
+    <rect x="720" y="70" width="200" height="130" rx="10" fill="#ffffff" stroke="#c9b183" stroke-width="1.5"/>
+    <circle cx="745" cy="95" r="14" fill="#4f8f6b"/>
+    <text x="745" y="100" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle">4</text>
+    <rect x="732" y="112" width="176" height="26" rx="6" fill="#3b2f22"/>
+    <text x="820" y="129" font-size="12.5" fill="#f4ecd8" text-anchor="middle" font-family="Consolas, monospace">/aase presets</text>
+    <text x="820" y="160" font-size="12.5" fill="#3b2f22" text-anchor="middle">Click a pose / effect</text>
+    <text x="820" y="178" font-size="12.5" fill="#6b5a3e" text-anchor="middle">點一下套用姿勢/特效</text>
+
+    <!-- Step 5 -->
+    <rect x="950" y="70" width="200" height="130" rx="10" fill="#ffffff" stroke="#c9b183" stroke-width="1.5"/>
+    <circle cx="975" cy="95" r="14" fill="#c9962c"/>
+    <text x="975" y="100" font-size="14" font-weight="700" fill="#ffffff" text-anchor="middle">5</text>
+    <rect x="962" y="112" width="176" height="26" rx="6" fill="#3b2f22"/>
+    <text x="1050" y="129" font-size="12.5" fill="#f4ecd8" text-anchor="middle" font-family="Consolas, monospace">/aase save</text>
+    <text x="1050" y="160" font-size="12.5" fill="#3b2f22" text-anchor="middle">Done — no angles needed</text>
+    <text x="1050" y="178" font-size="12.5" fill="#6b5a3e" text-anchor="middle">存檔完成,全程不用懂角度</text>
+  </g>
+
+  <line x1="230" y1="135" x2="258" y2="135" stroke="#8a7550" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="460" y1="135" x2="488" y2="135" stroke="#8a7550" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="690" y1="135" x2="718" y2="135" stroke="#8a7550" stroke-width="3" marker-end="url(#arrow)"/>
+  <line x1="920" y1="135" x2="948" y2="135" stroke="#8a7550" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <text x="30" y="232" font-size="12" fill="#6b5a3e">No prior posing skill required — the preset library does the art direction for you.</text>
+</svg>
