@@ -21,8 +21,8 @@
 
 ### 刻意的邊界(設計決策,不是限制清單)
 
-- **只碰本插件放置的元件**(PDC 標記)。玩家手放的原版盔甲座、其他外掛生成的實體一律不動——否則這個外掛就變成 entity killer。`whois` 找不到時會明講。
-- **只碰已載入區塊**。本外掛不做世界/區塊掃描(效能紅線),`purge` 使用 bounded 的 `getNearbyEntities` 再以球形距離過濾,因此到不了沒人載入的區塊;訊息會提醒管理員這一點。
+- **只碰本插件放置的元件**(PDC 標記)。玩家手放的原版盔甲座、其他插件生成的實體一律不動——否則這個插件就變成 entity killer。`whois` 找不到時會明講。
+- **只碰已載入區塊**。本插件不做世界/區塊掃描(效能紅線),`purge` 使用 bounded 的 `getNearbyEntities` 再以球形距離過濾,因此到不了沒人載入的區塊;訊息會提醒管理員這一點。
 - **不刪玩家的存檔**。`purge` 只清除世界上的實體,玩家的作品檔案保留,可重新放置到合理位置——這是能解決問題的最小破壞。
 - **半徑清除為兩段式**(預覽 → `confirm`),因為批次刪除他人作品不可逆。
 - 移除元件時會從所有開啟中的編輯 session 摘除該實體參照,避免別的玩家正在編輯時留下失效參照。
@@ -47,7 +47,7 @@
 - **關鍵影格動畫(P3)**:時間軸 + 關鍵影格,`AnimationPlayer` 即時預覽播放(Display 走客戶端插值、盔甲座逐 tick,離線自動停止)。(`9d60717`)
 - **匯出(P1/P3)**:`SummonExporter` 匯出可點擊複製的 `/summon` 指令;`McFunctionExporter` 匯出含動畫驅動(`load`/`tick`/`frames/*`)的 mcfunction 資料包。(`9d60717`)
 - **分享碼與匯入(P4)**:`store/ShareCode`(`AASE1:` + Base64url(gzip(JSON)),對長度/解壓有上限防護,壞碼回 `null` 不丟例外)+ `/aase share`(可點擊複製)/ `/aase import <碼> [名稱]`(重設 owner + 新 id,受每人數量上限守門)。(`2e729ca`)
-- **對外事件 API(P4)**:`api/AaseSceneSaveEvent`(通知,玩家存檔後觸發)、`api/AaseScenePlaceEvent`(可取消,load/import 放置前觸發)——讓其他外掛掛我們的事件,零反向依賴。(`2e729ca`)
+- **對外事件 API(P4)**:`api/AaseSceneSaveEvent`(通知,玩家存檔後觸發)、`api/AaseScenePlaceEvent`(可取消,load/import 放置前觸發)——讓其他插件掛我們的事件,零反向依賴。(`2e729ca`)
 - **裝備選單 GUI**:`menu/EquipmentMenu`,手持物品點格子=裝上、空手點=卸下,只複製游標物品、玩家物品零消耗零複製。(`2e729ca`)
 - **`/aase info`**:場景資訊摘要(元件數/盔甲座/Display/發射器/動畫/選取/存檔狀態)。(`2e729ca`)
 - **遊戲內翻頁手冊**:`/aase guide` 開啟可翻頁的書(`guide.yml` 資料驅動,深色配紙底色);控制面板右上角加📖鍵;`/aase help` 對玩家改開書、對 console 留指令清單。(`a8519f0`)

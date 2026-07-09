@@ -20,7 +20,7 @@ limits:
   per-chunk: 100
 
 region:
-  # true = 放置/編輯前模擬一次保護事件,尊重 GriefPrevention/WorldGuard/Towny/Lands 等領地外掛
+  # true = 放置/編輯前模擬一次保護事件,尊重 GriefPrevention/WorldGuard/Towny/Lands 等領地插件
   # false = 不檢查領地(僅靠權限與擁有權)。bypass 權限:aase.bypass.region
   event-probe: true
 

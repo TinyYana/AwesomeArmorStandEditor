@@ -5,13 +5,13 @@
 ## 0. 定位與硬規則
 
 - **可開源、上架 SpigotMC**:程式碼與命名對外界友善,預設文字外部化到 `messages.yml`(預設繁中,可被覆寫/翻譯)。
-- **完全獨立、跨平台(Spigot + Paper)**:不硬依賴任何外掛(含 LycoLib)。外部使用者一載即可用,丟 Spigot 不 crash、正常運作。
+- **完全獨立、跨平台(Spigot + Paper)**:不硬依賴任何插件(含 LycoLib)。外部使用者一載即可用,丟 Spigot 不 crash、正常運作。
   - **只用 Bukkit/Spigot API 面**,不碰 Paper-only 方法(否則 Spigot 端 `NoSuchMethodError`)。踩雷點:用 `World.rayTraceEntities` 不用 Paper `getTargetEntity`;`TextDisplay.setText(String)` 不用 `text(Component)`;文字一律走自帶 audience 不用 Paper 原生 `sendMessage(Component)`;物品序列化用 `BukkitObjectStream` 不用 Paper `serializeAsBytes`。
   - **文字用打包(shade+relocate)的 Adventure + MiniMessage**,經 `BukkitAudiences` 送:Spigot/Paper 一致的現代文字 + 匯出指令一鍵點擊複製。relocate 到 `com.tinyyana.awesomeArmorStandEditor.libs.kyori.*`。
-- **不反向依賴外部外掛**。與外部整合一律用三種手段之一:
-  1. **Bukkit 權限節點** — 任何權限外掛(LuckPerms…)透明支援,零依賴。
+- **不反向依賴外部插件**。與外部整合一律用三種手段之一:
+  1. **Bukkit 權限節點** — 任何權限插件(LuckPerms…)透明支援,零依賴。
   2. **軟整合(softdepend + 反射)** — 領地類(GP/WorldGuard)與 LycoLib 都用 `PluginManager` 存在檢查 + 反射/事件探針,存在才啟用;編譯期不依賴它們。
-  3. **自家 API / 事件** — 讓別的外掛反過來掛我們,而不是我們掛它們。
+  3. **自家 API / 事件** — 讓別的插件反過來掛我們,而不是我們掛它們。
 - **LycoLib 軟整合**:偵測到 LycoLib 時反射呼叫其 `AuditLog`(Lycohinya 環境加值);缺席則 no-op。編譯期不連 LycoLib、不進 composite build。
 - 效能與安全是紅線,不是加分項(見 §8)。
 
@@ -22,7 +22,7 @@
 | 1 | 編輯互動模型 | **混合式**:GUI 控制面板 + 手持編輯工具在世界中直接抓取/旋轉 + actionbar 即時讀數 |
 | 2 | 動畫載體與執行 | **盔甲座與 Display 皆可上關鍵影格 + 嚴格預算**:Display 走客戶端插值(便宜),盔甲座逐 tick 更新但有硬並發上限 + 距離裁剪 |
 | 3 | 首版範圍 | **分階段**:P1 先做紮實靜態編輯器;粒子(P2)、關鍵影格動畫(P3)、分享碼/API(P4)排後 |
-| 4 | 領地尊重 | **通用事件探針 + 選用橋接**:放置/編輯前模擬保護事件(自動相容會攔事件的領地外掛);另對 GP/WorldGuard 加反射橋接給精準訊息 |
+| 4 | 領地尊重 | **通用事件探針 + 選用橋接**:放置/編輯前模擬保護事件(自動相容會攔事件的領地插件);另對 GP/WorldGuard 加反射橋接給精準訊息 |
 
 ## 2. 資料模型
 
@@ -109,7 +109,7 @@ com.tinyyana.awesomeArmorStandEditor
 ```
 interface RegionGuard { fun canEdit(player, location): Result  // ALLOW / DENY(reason) }
 ```
-- `EventProbeGuard`(預設、通用):放置/編輯前於同步執行緒模擬一次保護事件,凡是會攔 place/interact 的領地外掛(GP/WorldGuard/Towny/Lands…)自動生效。探針事件不落地、不改世界。
+- `EventProbeGuard`(預設、通用):放置/編輯前於同步執行緒模擬一次保護事件,凡是會攔 place/interact 的領地插件(GP/WorldGuard/Towny/Lands…)自動生效。探針事件不落地、不改世界。
 - `GriefPreventionBridge` / `WorldGuardBridge`(選用、反射):偵測到插件才載入,提供更精準的拒絕訊息與 claim owner 判斷。
 - 疊加規則:先擁有權(PDC owner)→ 再 RegionGuard → 再數量上限。任一拒絕即擋。
 - `aase.bypass.region` 權限可略過(管理/創造服)。
@@ -180,7 +180,7 @@ aase.limit.<n>           數量上限覆寫(取最大)
 **已實作**:**P2** 粒子發射器(marker 實體 + 預算限流 ticker)、**P3** 關鍵影格時間軸(`Animation`/`Track`/`Keyframe` + `AnimationPlayer` 即時播放 + `McFunctionExporter` datapack 匯出)。
 **已實作(P4 + 易用/效能一輪)**:
 - **分享碼/匯入**:`store/ShareCode`(`AASE1:` + Base64url(gzip(JSON)),decode 有長度/解壓上限防護)+ `/aase share`(可點擊複製)/`/aase import <碼> [名稱]`(重設 owner+新 id,匯入受每人上限守門)。
-- **對外事件 API**:`api/AaseSceneSaveEvent`(通知)、`api/AaseScenePlaceEvent`(可取消,load/import 前擲)—— 讓別的外掛掛我們,零反向依賴。
+- **對外事件 API**:`api/AaseSceneSaveEvent`(通知)、`api/AaseScenePlaceEvent`(可取消,load/import 前擲)—— 讓別的插件掛我們,零反向依賴。
 - **裝備 GUI**:`menu/EquipmentMenu`,手持物品點格子=裝上、空手點=卸下,**只複製游標物品、全程 cancel,不會消耗/複製玩家物品**;控制面板裝備鍵改開此選單。
 - **`/aase info`**:場景資訊(元件/發射器/動畫/選取/存檔狀態)。
 - **效能**:`ParticleService` 改為**每個 marker 只在生成/索引時解一次 PDC 字串 + 預解析 `Particle` 列舉並快取**,每 tick 迴圈零解析(只判 rate 與玩家距離);markers 空時整個 ticker 直接早退。

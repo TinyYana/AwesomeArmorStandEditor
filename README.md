@@ -142,8 +142,8 @@ Share code format: `ShareCode.encode(scene)` = `AASE1:` + URL-safe Base64(gzip(J
 - **存檔 / 分享 / 匯出**:每個場景是可攜的 JSON 藍圖,可重複放置;`/aase share` 產生一串**分享碼**(gzip+Base64,可在聊天貼給別人),對方 `/aase import` 一鍵拿到同一份作品;匯出 `/summon` 指令(一鍵複製)或 **mcfunction 資料包**(含動畫驅動)。
 - **裝備選單**:`/aase equip` 開圖形裝備欄,手持物品點格子就穿上、空手點就卸下 —— **不會消耗或弄丟你的物品**。
 - **生存服安全**:元件擁有權標記(反格里芬)、每人/每區塊/全域數量上限、尊重領地保護;**寫入伺服器檔案的功能(匯出、存進共用範本庫)預設只開放給管理員/建築師**(見權限)。
-- **管理員工具**:有人把作品放在奇怪的地方?`/aase admin whois` 查是誰放的、`/aase admin remove` 移除、`/aase admin purge <半徑> [玩家]` 先預覽再 `confirm` 才批次清除。**只碰本外掛放置的元件**(玩家手放的原版盔甲座不動),而且**不刪玩家的存檔**。
-- **零硬依賴、跨平台**:在 Spigot 與 Paper 都能跑;不需要安裝任何其他外掛。
+- **管理員工具**:有人把作品放在奇怪的地方?`/aase admin whois` 查是誰放的、`/aase admin remove` 移除、`/aase admin purge <半徑> [玩家]` 先預覽再 `confirm` 才批次清除。**只碰本插件放置的元件**(玩家手放的原版盔甲座不動),而且**不刪玩家的存檔**。
+- **零硬依賴、跨平台**:在 Spigot 與 Paper 都能跑;不需要安裝任何其他插件。
 
 ### 相容性
 
@@ -196,14 +196,14 @@ Share code format: `ShareCode.encode(scene)` = `AASE1:` + URL-safe Base64(gzip(J
 - `aase.admin` —— `/aase admin whois|remove|purge`、編輯他人作品、`/aase reload`。
 - `aase.bypass.region`、`aase.bypass.limit`。
 
-詳見 `plugin.yml`;用 LuckPerms 等權限外掛可自由調整。
+詳見 `plugin.yml`;用 LuckPerms 等權限插件可自由調整。
 
 #### 管理員工具(`/aase admin`)
 
 刻意的邊界 —— 它不是通用的實體清除器:
 
-- **只碰本外掛放置的元件。** 玩家手放的原版盔甲座、其他外掛生成的實體一律不動;`whois` 找不到時會直說。
-- **只碰已載入區塊。** 本外掛不掃描世界,所以清除到不了沒人載入的區塊。
+- **只碰本插件放置的元件。** 玩家手放的原版盔甲座、其他插件生成的實體一律不動;`whois` 找不到時會直說。
+- **只碰已載入區塊。** 本插件不掃描世界,所以清除到不了沒人載入的區塊。
 - **不刪玩家的存檔。** purge 只清世界上的實體,玩家可以把作品重新放到合理的位置。
 - **半徑清除為兩段式**(預覽 → 60 秒內 `confirm`),半徑由 `admin.max-purge-radius`(預設 `64`)夾住。
 
