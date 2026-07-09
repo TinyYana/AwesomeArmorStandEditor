@@ -309,6 +309,7 @@ aase.create.display      放 Display(預設所有人)
 aase.scene.save          存檔(自己的存檔資料夾,預設所有人)
 aase.scene.share         產生 / 匯入分享碼(不落地檔案,預設所有人)
 aase.animate             動畫(預設所有人)
+aase.clear               /aase clear <半徑> 清掉別人放在你有建築權之處的元件(預設所有人)
 aase.export.command      匯出指令 / 資料包(寫伺服器檔案)— 預設 OP
 aase.preset.save         /aase pose save 寫全服共用 presets.yml — 預設 OP
 aase.admin               管理(編他人、/aase admin whois|remove|purge、reload)— 預設 OP
@@ -348,6 +349,10 @@ aase.bypass.limit        略過數量上限 — 預設 OP
 **Q:滾輪不能換物品欄?** 編輯中滾輪被拿去換步進/軸。`/aase close` 結束編輯即可。
 
 **Q:放不了東西、說「這裡受保護」?** 你在別人的領地。到自己的地,或請管理員給 `aase.bypass.region`。
+
+**Q:有人把作品放在我的領地裡,我打不壞?** 元件是刻意打不壞的(免得被流彈、怪物、隨手一拳毀掉)。站在那裡跑 `/aase clear <半徑>`——你在領地內有建築權,所以清得掉;領地外別人的東西你動不了。他們的存檔不會被刪,可以重放。
+
+**⚠ 管理員注意:`/kill` 會穿透保護。** 原版盔甲座對 `/kill`(以及虛空)這類傷害直接被移除,不經過 `EntityDamageEvent`,本插件的保護攔不到。所以 `/kill @e[type=armor_stand]` 會**清光全服的作品**,連同玩家手放的原版盔甲座。要清元件請用 `/aase clear` 或 `/aase admin remove|purge`——它們只碰本插件標記過的東西。
 
 **Q:載入(load)後變兩份?** `load` 是「放新的一份」。要接續編輯既有作品用 `/aase edit`。
 

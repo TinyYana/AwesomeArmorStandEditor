@@ -115,6 +115,8 @@ class AaseCommand(private val plugin: AwesomeArmorStandEditorPlugin) : TabExecut
             }
             "mirror" -> require(sender, "aase.use") { controller.mirrorPose(sender) }
             "close" -> require(sender, "aase.use") { controller.close(sender) }
+            // Not admin-gated: it can only clear other people's elements off ground you may build on.
+            "clear" -> require(sender, "aase.clear") { plugin.adminTools.clearIntruders(sender, args.drop(1)) }
             // Moderation: whois/remove/purge act on OTHER people's art, so they all sit behind aase.admin.
             "admin" -> require(sender, "aase.admin") {
                 when (args.getOrNull(1)?.lowercase()) {
@@ -189,7 +191,7 @@ class AaseCommand(private val plugin: AwesomeArmorStandEditorPlugin) : TabExecut
     private val subcommands = listOf(
         "guide", "tool", "new", "presets", "pose", "fx", "mirror", "addstand", "adddisplay", "setblock", "settext",
         "setitem", "setname", "setequip", "equip", "flag", "particle", "anim", "save", "load", "edit", "list", "info",
-        "delete", "export", "share", "import", "close", "admin", "reload",
+        "delete", "export", "share", "import", "close", "clear", "admin", "reload",
     )
 
     /** Hidden from tab-complete for players who can't use them. */
@@ -216,6 +218,7 @@ class AaseCommand(private val plugin: AwesomeArmorStandEditorPlugin) : TabExecut
                 "pose" -> (listOf("save") + plugin.presets.poses.map { it.id }).filter { it.startsWith(args[1].lowercase()) }
                 "fx" -> plugin.presets.fx.map { it.id }.filter { it.startsWith(args[1].lowercase()) }
                 "load" -> if (sender is Player) plugin.store.list(sender.uniqueId).map { it.name }.filter { it.startsWith(args[1]) } else emptyList()
+                "clear" -> listOf("8", "16", "32").filter { it.startsWith(args[1]) }
                 else -> emptyList()
             }
             3 -> when (args[0].lowercase()) {

@@ -51,6 +51,10 @@ permissions:
   aase.animate:
     description: 使用關鍵影格動畫(P3)
     default: true
+  aase.clear:
+    # /aase clear <半徑> — 只清「別人的」元件,且只在該玩家有建築權的方塊上;不需要 aase.admin
+    description: 清除別人放在你有建築權之處的元件(領地內只有領主與受信任者清得掉)
+    default: true
   aase.admin:
     # /aase admin whois|remove|purge — 只作用於本插件放置的元件,不碰玩家手放的原版盔甲座
     description: 管理:編輯他人作品、查擁有者、強制移除他人元件、reload

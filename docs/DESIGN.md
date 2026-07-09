@@ -132,6 +132,7 @@ aase.scene.save          存檔
 aase.scene.share         匯出/匯入分享
 aase.export.command      匯出 summon 指令
 aase.animate             動畫(P3)
+aase.clear               清除別人放在你有建築權之處的元件(領主自助清理,非管理員)
 aase.admin               管理(編他人作品、reload、purge)
 aase.bypass.region       略過領地檢查
 aase.bypass.limit        略過數量上限

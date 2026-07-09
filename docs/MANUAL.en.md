@@ -312,6 +312,7 @@ aase.create.display      place displays (default: everyone)
 aase.scene.save          save (own save folder, default: everyone)
 aase.scene.share         generate / import share codes (never writes files, default: everyone)
 aase.animate             animation (default: everyone)
+aase.clear               /aase clear <radius> — remove others' elements where you may build (default: everyone)
 aase.export.command      export commands / datapacks (writes server files) — default: OP
 aase.preset.save         /aase pose save writes the server-wide presets.yml — default: OP
 aase.admin               admin (edit others' builds, /aase admin whois|remove|purge, reload) — default: OP
@@ -349,6 +350,10 @@ All of the above take effect with `/aase reload`, no restart needed.
 **Q: The scroll wheel won't switch hotbar slots?** While editing, the scroll wheel is repurposed for step/axis. Run `/aase close` to end the session.
 
 **Q: Can't place anything, "this area is protected"?** You're in someone else's claim. Move to your own land, or ask an admin to grant `aase.bypass.region`.
+
+**Q: Someone left a build in my claim and I can't break it?** Elements are deliberately indestructible, so a stray arrow, creeper, or punch can't ruin an hour of posing. Stand there and run `/aase clear <radius>` — you have build rights inside your claim, so it clears; outside it, other people's elements stay put. Their saved scene is untouched, so they can re-place it elsewhere.
+
+**⚠ Admins: `/kill` goes straight through the protection.** Vanilla armor stands are removed outright by `BYPASSES_INVULNERABILITY` damage (`/kill`, the void) without firing `EntityDamageEvent`, so this plugin's listener never sees it. `/kill @e[type=armor_stand]` will wipe every build on the server, hand-placed vanilla stands included. Use `/aase clear` or `/aase admin remove|purge` — they only ever touch entities this plugin tagged.
 
 **Q: `load` after editing creates two copies?** `load` always places **a new copy**. To keep editing an existing build, use `/aase edit`.
 

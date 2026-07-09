@@ -80,6 +80,7 @@ Granted to every player by default (`default: true`): `aase.use`, `aase.create.a
 
 - `aase.export.command` — export summon commands / mcfunction datapacks (writes into `plugins/`).
 - `aase.preset.save` — `/aase pose save` writes into the **server-wide shared** `presets.yml`.
+- `aase.clear` — `/aase clear <radius>`, removing *other people's* elements from ground you may build on. Default: everyone.
 - `aase.admin` — `/aase admin whois|remove|purge`, editing other players' builds, `/aase reload`.
 - `aase.bypass.region`, `aase.bypass.limit`.
 
@@ -193,6 +194,7 @@ Share code format: `ShareCode.encode(scene)` = `AASE1:` + URL-safe Base64(gzip(J
 
 - `aase.export.command` —— 匯出 summon 指令 / mcfunction 資料包(寫進 `plugins/` 資料夾)。
 - `aase.preset.save` —— `/aase pose save` 把姿勢存進**全服共用**的 `presets.yml`。
+- `aase.clear` —— `/aase clear <半徑>`,清掉**別人**放在你有建築權之處的元件。預設所有人。
 - `aase.admin` —— `/aase admin whois|remove|purge`、編輯他人作品、`/aase reload`。
 - `aase.bypass.region`、`aase.bypass.limit`。
 

@@ -2,6 +2,8 @@ package com.tinyyana.awesomeArmorStandEditor
 
 import com.tinyyana.awesomeArmorStandEditor.admin.PendingPurge
 import com.tinyyana.awesomeArmorStandEditor.admin.parsePurgeArgs
+import com.tinyyana.awesomeArmorStandEditor.admin.selectClearable
+import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -54,6 +56,31 @@ class AdminLogicTest {
         assertFalse(plan.isExpired(created + PendingPurge.TTL_MILLIS), "剛好在 TTL 邊界上仍有效")
         assertTrue(plan.isExpired(created + PendingPurge.TTL_MILLIS + 1), "超過 TTL 的確認必須失效")
     }
+
+    @Test
+    fun clearTakesOnlyOthersElementsOnGroundYouMayBuildOn() {
+        val me = UUID.randomUUID()
+        val other = UUID.randomUUID()
+        // (owner, may-I-build-there)
+        val myArt = Candidate(me, buildable = true)
+        val intruderInMyClaim = Candidate(other, buildable = true)
+        val theirArtOnTheirLand = Candidate(other, buildable = false)
+        val untagged = Candidate(null, buildable = true)
+
+        val cleared = selectClearable(
+            candidates = listOf(myArt, intruderInMyClaim, theirArtOnTheirLand, untagged),
+            self = me,
+            ownerOf = { it.owner },
+            canBuildAt = { it.buildable },
+        )
+
+        assertEquals(listOf(intruderInMyClaim), cleared, "只該清掉別人放在你有建築權之處的元件")
+        assertFalse(myArt in cleared, "絕不能清掉自己的作品")
+        assertFalse(theirArtOnTheirLand in cleared, "絕不能清掉你沒有建築權的地方的東西")
+        assertFalse(untagged in cleared, "沒有擁有者標記的東西不歸這裡管")
+    }
+
+    private data class Candidate(val owner: UUID?, val buildable: Boolean)
 
     private companion object {
         /** PendingPurge only stores the Location; expiry never touches it, so a null-ish stand-in is fine. */

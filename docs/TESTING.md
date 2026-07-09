@@ -47,8 +47,26 @@ Spigot 相容性:編譯只用 Bukkit/Spigot API 面,Adventure 以 shade+relocate
 
    最後把 `region.event-probe: false` → `/aase reload` → 上面每一條都應該放行(確認開關真的有效)。
 
-5. 效能:反覆放置/編輯時開 Spark 或 `/tps`,確認無掉 TPS(不應有 chunk 掃描)。
-   MOVE 模式連續微調時,只有跨越方塊邊界的那一下會發探針事件;若裝了 CoreProtect,確認不會被洗版。
+5. `/aase clear <半徑>`(領主自助清理,**不需要 `aase.admin`**)。用兩個非 OP 帳號 A、B:
+   1. A 圈一塊領地。B(不在信任名單內)**無法**在裡面放東西(第 4 條已驗)。請管理員用 `aase.bypass.region` 在 A 的領地內幫 B 放一個元件,模擬 0.2.1 之前留下的舊元件。
+   2. A 站在旁邊 `/aase clear 8` → B 的元件應被清除,訊息列出 B 的名字。
+   3. **A 自己的元件必須留著**——先讓 A 在同一塊地放兩個自己的元件再 `clear`,它們一個都不能少(自己的要用編輯器刪)。
+   4. B 站進 A 的領地跑 `/aase clear 8` → 應回「沒有你能清除的元件」,A 的東西一個都不能動。
+   5. 無主土地:A 放一個元件,B 走過去 `/aase clear 8` → **會被清掉**(該處本來就沒有保護,與方塊一致)。這是刻意行為,不是 bug。
+   6. 清完後 B 的存檔還在:B 跑 `/aase load <作品>` 應能重新放置。
+   7. 元件仍打不壞:徒手打、爬行者炸、箭射 A 的元件 → 都不該消失。
+      反向驗證(console 即可,不必玩家)。**只看實體還在不在,不要讀 `damage` 的回應字串**——它兩組都會印「Target is invulnerable」,不能拿來判讀:
+      ```
+      summon armor_stand 12 66 -12 {Tags:["ctrl"]}            # 控制組:無 AASE 標記
+      damage @e[tag=ctrl,limit=1] 1000 minecraft:explosion
+      execute if entity @e[tag=ctrl]                          # 預期 Test failed(被炸掉)
+      ```
+      同樣的爆炸傷害打在本插件的元件上,元件應**存活**(`EntityProtectionListener` 生效)。
+      但 `kill @e[...]` 會讓元件**消失**:原版盔甲座對 `BYPASSES_INVULNERABILITY` 傷害直接被移除,不經 `EntityDamageEvent`,擋不掉。
+      **管理員別跑 `/kill @e[type=armor_stand]`,它會清光全服作品。**
+
+6. 效能:反覆放置/編輯時開 Spark 或 `/tps`,確認無掉 TPS(不應有 chunk 掃描)。
+   MOVE 模式連續微調時,只有跨越方塊邊界的那一下會發探針事件;`/aase clear` 對同一格上的多個元件只探一次。若裝了 CoreProtect,確認不會被洗版。
 
 ### 玩家視角(遊戲內手冊)
 

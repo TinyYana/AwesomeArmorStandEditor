@@ -23,6 +23,22 @@ internal fun parsePurgeArgs(args: List<String>, maxRadius: Int): PurgeRequest? {
     )
 }
 
+/**
+ * Which elements a builder may clear with `/aase clear`: someone *else's*, standing somewhere the
+ * builder is allowed to build. Pure so the rule survives refactors — getting either half wrong turns
+ * a cleanup tool into a griefing tool (drop the owner test and you nuke your own art; drop the build
+ * test and you nuke anyone's).
+ */
+internal fun <T> selectClearable(
+    candidates: List<T>,
+    self: UUID,
+    ownerOf: (T) -> UUID?,
+    canBuildAt: (T) -> Boolean,
+): List<T> = candidates.filter { candidate ->
+    val owner = ownerOf(candidate)
+    owner != null && owner != self && canBuildAt(candidate)
+}
+
 /** A previewed purge awaiting `/aase admin confirm`. Expires so a stale token can't fire later. */
 internal data class PendingPurge(
     val center: Location,

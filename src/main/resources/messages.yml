@@ -23,6 +23,7 @@ usage:
   fx: "<gray>用法:<aqua>/aase fx <特效id></aqua>(用 <aqua>/aase presets</aqua> 看清單)"
   import: "<gray>用法:<aqua>/aase import <分享碼> [新名稱]</aqua>(分享碼用 <aqua>/aase share</aqua> 產生)"
   admin: "<gray>用法:<aqua>/aase admin <whois|remove|purge <半徑> [玩家]|confirm>"
+  clear: "<gray>用法:<aqua>/aase clear <半徑></aqua>(清掉別人放在你有建築權的地方的元件)"
 
 # 管理工具(/aase admin,權限 aase.admin):處理別人亂放的作品
 admin:
@@ -41,6 +42,10 @@ admin:
   purge-expired: "<red>確認已逾時,請重新跑一次 <aqua>/aase admin purge"
   purge-done: "<green>已移除 <white>{count}</white> 個元件(玩家的存檔沒有被刪,他們仍可重新放置)"
   loaded-only: "<dark_gray>只會影響已載入區塊內的元件"
+
+clear:
+  none: "<yellow>半徑 {radius} 格內沒有你能清除的元件(自己的作品請用編輯器刪,別人領地裡的東西不歸你清)"
+  done: "<green>已清除 <white>{count}</white> 個元件,來自:<white>{owners}</white><gray>(他們的存檔沒有被刪,可以重新放置)"
 
 session:
   none: "<red>你還沒有進行中的場景,先用 <aqua>/aase new <名稱></aqua> 開始"

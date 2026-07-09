@@ -123,6 +123,56 @@ class AdminTools(private val plugin: AwesomeArmorStandEditorPlugin) {
         )
     }
 
+    // --- clear (landowner cleanup, no aase.admin) --------------------------
+
+    /**
+     * The counterpart to the region guard. The guard stops new art landing in your claim; this clears
+     * the art that landed before the guard existed, without needing an admin.
+     *
+     * Who may clear what is decided by the same question the guard asks — "may this player build at
+     * this block?" So inside a claim only its owner and trusted players can clear, and in unclaimed
+     * land anyone can, exactly as if the elements were blocks. Never touches your *own* elements: a
+     * stray `/aase clear 32` must not delete the thing you spent an hour posing (use the editor).
+     *
+     * No preview/confirm step, unlike admin purge: this can only ever remove other people's elements
+     * from ground you control, and their saved scene files are untouched, so they can re-place.
+     */
+    fun clearIntruders(player: Player, args: List<String>) {
+        val radius = parsePurgeArgs(args, plugin.settings.maxPurgeRadius)?.radius
+            ?: return plugin.texts.send(player, "usage.clear")
+        val center = player.location.clone()
+
+        // ponytail: one region probe per distinct block, not per entity — a scene stacks many
+        // elements on one block and each probe fires a synthetic event other plugins may log.
+        val probed = HashMap<Triple<Int, Int, Int>, Boolean>()
+        val victims = selectClearable(
+            candidates = ownedNear(center, radius, ownerFilter = null),
+            self = player.uniqueId,
+            ownerOf = { plugin.registry.read(it)?.owner },
+            canBuildAt = { entity ->
+                val loc = entity.location
+                probed.getOrPut(Triple(loc.blockX, loc.blockY, loc.blockZ)) { plugin.guard.canBuild(player, loc) }
+            },
+        )
+        if (victims.isEmpty()) return plugin.texts.send(player, "clear.none", "radius" to radius.toString())
+
+        val owners = victims.mapNotNull { plugin.registry.read(it)?.owner }.distinct()
+        for (entity in victims) remove(entity)
+
+        plugin.texts.send(
+            player, "clear.done",
+            "count" to victims.size.toString(),
+            "radius" to radius.toString(),
+            "owners" to owners.joinToString("、") { ownerName(it) },
+        )
+        plugin.texts.send(player, "admin.loaded-only")
+        LycoLibHook.audit(
+            plugin.name, player.name, "scene.clear",
+            "count=${victims.size} radius=$radius owners=${owners.joinToString(",")} " +
+                "center=${center.world?.name}:${center.blockX},${center.blockY},${center.blockZ}",
+        )
+    }
+
     // --- internals ---------------------------------------------------------
 
     /** Same targeting rule as /aase edit: nearest owned entity within the tool's select range. */
