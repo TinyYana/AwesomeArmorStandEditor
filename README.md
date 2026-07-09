@@ -107,6 +107,10 @@ Share code format: `ShareCode.encode(scene)` = `AASE1:` + URL-safe Base64(gzip(J
 - [`docs/TESTING.md`](docs/TESTING.md) — test steps (admin / player perspective).
 - [`CHANGELOG.md`](CHANGELOG.md) — detailed release notes.
 
+### License
+
+[GNU AGPL-3.0](LICENSE). Free to use, including commercially, on any server. If you distribute a modified jar or its source — to anyone, including by running it as a network service that others interact with — you must make that modified source available under the same license. Just running it privately (even on a paid/commercial server) never triggers this.
+
 ---
 
 ## 繁體中文
@@ -202,3 +206,7 @@ Share code format: `ShareCode.encode(scene)` = `AASE1:` + URL-safe Base64(gzip(J
 - [`docs/MANUAL.md`](docs/MANUAL.md) / [`docs/MANUAL.en.md`](docs/MANUAL.en.md) — 完整使用說明手冊(繁體中文 / English)。
 - [`docs/TESTING.md`](docs/TESTING.md) — 測試步驟(管理員 / 玩家視角)。
 - [`CHANGELOG.md`](CHANGELOG.md) — 詳細版本變更紀錄。
+
+### 授權
+
+[GNU AGPL-3.0](LICENSE)。可自由使用,包含商用伺服器。若你把修改過的 jar 或原始碼交給任何人——包含把修改版跑成讓別人連線互動的網路服務——就必須把修改後的原始碼以同一授權公開。單純私下(即使是營利伺服器)拿來跑,不會觸發這個義務。

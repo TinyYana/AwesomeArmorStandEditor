@@ -39,6 +39,11 @@
 ### CI / Tooling
 
 - 新增 GitHub Actions 建置工作流程(`.github/workflows/build.yml`):每次 push/PR 自動 `./gradlew build`(編譯 + 單元測試 + shaded jar)並上傳 jar 產物;推送 `v*` tag 時額外建立 GitHub Release,附上打包好的 jar 與(從本檔案擷取的)該版本變更說明。
+- 修正 `gradlew` 在 git 索引中遺失可執行位元(Windows 端 commit 不保留 POSIX exec bit)導致 CI 第一次跑 `Process completed with exit code 126` 失敗的問題;同時在 workflow 加一道防呆 `chmod +x gradlew`。
+
+### Legal(授權)
+
+- 專案授權定案為 **GNU AGPL-3.0**(`LICENSE`):商用伺服器可自由使用;若修改後的 jar 或原始碼交到任何人手上(含把修改版跑成讓其他人連線互動的網路服務),必須以同一授權公開原始碼。單純私下營運不觸發此義務。README 中英文版皆加上授權說明章節。
 
 [Unreleased]: https://github.com/TinyYana/AwesomeArmorStandEditor/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/TinyYana/AwesomeArmorStandEditor/releases/tag/v0.1.0
