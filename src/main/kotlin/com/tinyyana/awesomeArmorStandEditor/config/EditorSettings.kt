@@ -19,6 +19,7 @@ data class EditorSettings(
     val selectRange: Int,
     val particleBudget: Int,
     val particleRange: Int,
+    val maxPurgeRadius: Int,
 ) {
     companion object {
         fun load(config: FileConfiguration): EditorSettings {
@@ -42,6 +43,7 @@ data class EditorSettings(
                 selectRange = config.getInt("tool.select-range", 6),
                 particleBudget = config.getInt("particles.budget-per-tick", 200),
                 particleRange = config.getInt("particles.render-range", 32),
+                maxPurgeRadius = config.getInt("admin.max-purge-radius", 64),
             )
         }
     }

@@ -1,5 +1,6 @@
 package com.tinyyana.awesomeArmorStandEditor
 
+import com.tinyyana.awesomeArmorStandEditor.admin.AdminTools
 import com.tinyyana.awesomeArmorStandEditor.animation.AnimationPlayer
 import com.tinyyana.awesomeArmorStandEditor.command.AaseCommand
 import com.tinyyana.awesomeArmorStandEditor.config.EditorSettings
@@ -41,6 +42,7 @@ class AwesomeArmorStandEditorPlugin : JavaPlugin() {
     lateinit var particles: ParticleService; private set
     lateinit var animation: AnimationPlayer; private set
     lateinit var presets: PresetLibrary; private set
+    lateinit var adminTools: AdminTools; private set
 
     @Volatile lateinit var settings: EditorSettings; private set
     @Volatile lateinit var guard: RegionGuard; private set
@@ -63,6 +65,7 @@ class AwesomeArmorStandEditorPlugin : JavaPlugin() {
         guideBook = GuideBook(this).also { it.reload() }
         particles = ParticleService(this, keys)
         animation = AnimationPlayer(this)
+        adminTools = AdminTools(this)
         LycoLibHook.init(server.pluginManager)
         registry.indexLoaded()
         particles.indexLoaded()

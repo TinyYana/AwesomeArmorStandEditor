@@ -293,9 +293,15 @@ Usage: drop the folder into the world's `datapacks/`, run `/reload`, then:
 | `/aase pose save <id> [name]` | Save into the shared preset library | **aase.preset.save (default: OP)** |
 | `/aase export command` / `export function` | Export (writes server files) | **aase.export.command (default: OP)** |
 | `/aase close` | End editing session | aase.use |
+| `/aase admin whois` | Show who placed the nearest element | **aase.admin (default: OP)** |
+| `/aase admin remove` | Remove the nearest element | **aase.admin (default: OP)** |
+| `/aase admin purge <radius> [player]` | Preview elements to remove within the radius | **aase.admin (default: OP)** |
+| `/aase admin confirm` | Execute the previewed purge | **aase.admin (default: OP)** |
 | `/aase reload` | Reload configuration | aase.admin |
 
 > Why `export` / `pose save` are OP-only by default: both **write to server files or mutate the server-wide shared `presets.yml`**, which isn't appropriate to hand to every player (it invites file/preset-library spam). The control panel's export button is **hidden entirely** for players without the permission — clicking it does nothing. Grant `aase.export.command` / `aase.preset.save` to a builder group with LuckPerms to allow it.
+>
+> `/aase admin …` is OP-only because it acts on **other players' builds**. See the moderation section below for its deliberate boundaries.
 
 ## 16. Permission reference
 
@@ -308,10 +314,24 @@ aase.scene.share         generate / import share codes (never writes files, defa
 aase.animate             animation (default: everyone)
 aase.export.command      export commands / datapacks (writes server files) — default: OP
 aase.preset.save         /aase pose save writes the server-wide presets.yml — default: OP
-aase.admin               admin (edit others' builds, reload, purge) — default: OP
+aase.admin               admin (edit others' builds, /aase admin whois|remove|purge, reload) — default: OP
 aase.bypass.region       bypass region checks — default: OP
 aase.bypass.limit        bypass element caps — default: OP
 ```
+
+### Moderation: when someone dumps builds where they shouldn't (`/aase admin`)
+
+1. `/aase admin whois` — stand next to it and find out **who placed it**, which scene it belongs to, and its coordinates.
+2. `/aase admin remove` — remove the nearest element (no editing session required).
+3. To clear an area: `/aase admin purge <radius> [player]` only **previews** how many elements would go; `/aase admin confirm` (within 60 seconds) actually does it.
+
+Deliberate boundaries — do not mistake this for a general entity remover:
+
+- **Only touches elements this plugin placed.** Hand-placed vanilla armor stands and entities from other plugins are never removed; `whois` says so explicitly.
+- **Only reaches loaded chunks.** The plugin never scans the world (hard performance rule), so a purge cannot reach art in chunks nobody has loaded.
+- **Never deletes the owner's saved scene.** A purge removes placed entities only; the owner can re-place their build somewhere sensible. Least destructive fix that solves the problem.
+- **Radius purge is two-stage**, and the radius is clamped by `admin.max-purge-radius` in `config.yml` (default `64`).
+- Every `remove` / `purge` writes a LycoLib audit entry (silently skipped when LycoLib is absent).
 
 ## 17. Configuration files
 

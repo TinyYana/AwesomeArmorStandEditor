@@ -92,6 +92,26 @@ Spigot 相容性:編譯只用 Bukkit/Spigot API 面,Adventure 以 shade+relocate
 24. 非 OP 開 `/aase` 控制面板:**匯出鍵應不顯示**;就算點到該格也不會匯出(GUI 有二次權限檢查,不能繞過指令權限)。
 25. 給該帳號 `aase.export.command` / `aase.preset.save`(LuckPerms)後,以上恢復可用。
 
+### 管理員強制移除工具(0.2.0 新增,管理員視角)
+
+> 需要 `aase.admin`。這組指令**只作用於用 `/aase` 放置的元件**、**只碰已載入區塊**、**不刪玩家的存檔**。
+
+26. 請另一個玩家(或用第二個帳號)`/aase new x` → `/aase addstand` 放一個盔甲座。用管理員站到旁邊 `/aase admin whois` → 應顯示**擁有者名稱 / 作品名 / 元件編號 / 世界+座標**。
+27. **邊界(必測)**:用手放一個**原版盔甲座**(拿盔甲座物品右鍵地面,不經 `/aase`),站旁邊 `/aase admin whois` → 應回「附近沒有本插件放置的元件」。**絕不能把它當成可移除目標。**
+28. `/aase admin remove` → 最近的那一個元件消失;再 `/aase admin whois` 應找不到。
+29. 粒子發射器也算元件:`/aase particle add FLAME` 後對著它 `/aase admin whois` → 位置行尾應標「(粒子發射器)」;`remove` 可清掉,粒子隨之停止。
+30. **兩段式清除**:`/aase admin purge 16` → 只印「半徑 16 格內有 N 個元件即將被移除」+ 確認提示,**世界上的東西一個都不能少**。接著 `/aase admin confirm` → 才真的清掉並回報數量。
+31. 只清某人的:`/aase admin purge 16 <玩家名>` → 預覽行應標「(只算 <玩家名> 的)」;confirm 後**別人的元件要留著**。
+32. 找不到玩家:`/aase admin purge 16 不存在的名字` → 回「找不到玩家」,不進入待確認狀態。
+33. **參數防呆**:`/aase admin purge`(不給半徑)、`purge 0`、`purge -5`、`purge abc` → 一律印用法,**什麼都不清、也不建立待確認**。
+34. **確認防呆**:沒先 purge 就 `/aase admin confirm` → 回「沒有待確認的清除」。
+35. **逾時**:`/aase admin purge 16` 後等 **超過 60 秒** 再 `confirm` → 回「確認已逾時」,不執行。
+36. **半徑夾限**:`/aase admin purge 9999` → 實際只會用 `config.yml` 的 `admin.max-purge-radius`(預設 64)。
+37. **session 清理**:讓某玩家正在 `/aase edit` 他的作品時,管理員 `remove` 掉其中一個元件 → 該玩家繼續操作不應噴例外(元件已從他的 session 移除)。
+38. **權限與 tab**:一般玩家 `/aase admin whois` → 「你沒有權限」;且輸入 `/aase ` 按 tab **看不到 `admin` / `reload`**。
+39. **稽核**:若伺服器有 LycoLib,`remove` / `purge` 應各寫一筆稽核紀錄(誰、清了誰的、幾個、座標)。沒有 LycoLib 時應安靜略過、不報錯。
+40. **未載入區塊**:把元件放在很遠的地方讓區塊卸載,回到出生點 `purge 64` → 那些元件**不會**被清掉(刻意:不掃描世界)。訊息會提醒「只會影響已載入區塊內的元件」。
+
 ### 驗收層級標記
 
 回報測試時標明做到哪層:L1 build / L2 deployed(enable 無錯)/ L3 runtime(指令有回應)/ L4 玩家端(姿勢/存讀/匯出真的可見可用)。
@@ -100,6 +120,7 @@ Spigot 相容性:編譯只用 Bukkit/Spigot API 面,Adventure 以 shade+relocate
 
 - **P1** 靜態編輯器、**P2** 粒子、**P3** 關鍵影格動畫 + mcfunction 匯出、**P4** 分享碼/匯入 + 對外事件 API 都已實作(見上方測試步驟)。
 - 另有:裝備選單 GUI、`/aase info`、寫檔/共用資料的權限分界。
+- **0.2.0**:管理員強制移除工具 `/aase admin whois|remove|purge|confirm`(兩段式確認 + 稽核紀錄)。
 - 仍待做:粒子/動畫的**視覺化編輯面板 / 時間軸 GUI**(目前走指令 + 範本庫)。
 
 ## 已知限制

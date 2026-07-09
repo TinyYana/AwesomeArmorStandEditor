@@ -29,3 +29,9 @@ particles:
   budget-per-tick: 200   # 每 tick 全服最多處理的發射器數(超過就跳過,保護 TPS)
   render-range: 32       # 發射器周圍多少格內有玩家才發射
 
+# 管理工具(/aase admin,權限 aase.admin)
+admin:
+  # /aase admin purge <半徑> 的最大半徑(格);超過會被夾到這個值。
+  # 只會清除「本插件放置」且「在已載入區塊內」的元件,不會碰玩家手放的原版盔甲座。
+  max-purge-radius: 64
+

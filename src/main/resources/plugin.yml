@@ -52,7 +52,8 @@ permissions:
     description: 使用關鍵影格動畫(P3)
     default: true
   aase.admin:
-    description: 管理:編輯他人作品、reload、purge
+    # /aase admin whois|remove|purge — 只作用於本插件放置的元件,不碰玩家手放的原版盔甲座
+    description: 管理:編輯他人作品、查擁有者、強制移除他人元件、reload
     default: op
   aase.bypass.region:
     description: 略過領地檢查

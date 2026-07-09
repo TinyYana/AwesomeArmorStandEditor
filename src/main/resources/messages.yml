@@ -22,6 +22,25 @@ usage:
   pose: "<gray>用法:<aqua>/aase pose <範本id></aqua> 套用,或 <aqua>/aase pose save <id> [名稱]</aqua> 存成自己的範本"
   fx: "<gray>用法:<aqua>/aase fx <特效id></aqua>(用 <aqua>/aase presets</aqua> 看清單)"
   import: "<gray>用法:<aqua>/aase import <分享碼> [新名稱]</aqua>(分享碼用 <aqua>/aase share</aqua> 產生)"
+  admin: "<gray>用法:<aqua>/aase admin <whois|remove|purge <半徑> [玩家]|confirm>"
+
+# 管理工具(/aase admin,權限 aase.admin):處理別人亂放的作品
+admin:
+  no-target: "<red>附近沒有本插件放置的元件(玩家手放的原版盔甲座不歸這裡管)"
+  whois: "<gray>擁有者 <white>{owner}</white> · 作品 <white>{scene}</white> · 元件 <white>#{id}"
+  whois-where: "<gray>位置 <white>{world} {x} {y} {z}</white>{extra}"
+  whois-emitter: " <dark_gray>(粒子發射器)"
+  scene-missing: "已刪除的存檔"
+  removed-one: "<green>已強制移除 <white>{owner}</white> 的元件 <white>#{id}"
+  owner-not-found: "<red>找不到玩家 <white>{name}"
+  purge-none: "<gray>半徑 {radius} 格內沒有可移除的元件"
+  purge-preview: "<yellow>半徑 <white>{radius}</white> 格內有 <white>{count}</white> 個元件{owner}即將被移除"
+  purge-preview-owner: "(只算 {owner} 的)"
+  purge-confirm-hint: "<gray>確認請在 60 秒內輸入 <aqua>/aase admin confirm"
+  purge-none-pending: "<red>沒有待確認的清除,先跑 <aqua>/aase admin purge <半徑>"
+  purge-expired: "<red>確認已逾時,請重新跑一次 <aqua>/aase admin purge"
+  purge-done: "<green>已移除 <white>{count}</white> 個元件(玩家的存檔沒有被刪,他們仍可重新放置)"
+  loaded-only: "<dark_gray>只會影響已載入區塊內的元件"
 
 session:
   none: "<red>你還沒有進行中的場景,先用 <aqua>/aase new <名稱></aqua> 開始"

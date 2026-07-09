@@ -115,6 +115,16 @@ class AaseCommand(private val plugin: AwesomeArmorStandEditorPlugin) : TabExecut
             }
             "mirror" -> require(sender, "aase.use") { controller.mirrorPose(sender) }
             "close" -> require(sender, "aase.use") { controller.close(sender) }
+            // Moderation: whois/remove/purge act on OTHER people's art, so they all sit behind aase.admin.
+            "admin" -> require(sender, "aase.admin") {
+                when (args.getOrNull(1)?.lowercase()) {
+                    "whois" -> plugin.adminTools.whois(sender)
+                    "remove" -> plugin.adminTools.removeTargeted(sender)
+                    "purge" -> plugin.adminTools.previewPurge(sender, args.drop(2))
+                    "confirm" -> plugin.adminTools.confirmPurge(sender)
+                    else -> deny(sender, "usage.admin")
+                }
+            }
             "reload" -> require(sender, "aase.admin") { plugin.reloadAll(); texts.send(sender, "reload.ok") }
             else -> help(sender)
         }
@@ -179,8 +189,12 @@ class AaseCommand(private val plugin: AwesomeArmorStandEditorPlugin) : TabExecut
     private val subcommands = listOf(
         "guide", "tool", "new", "presets", "pose", "fx", "mirror", "addstand", "adddisplay", "setblock", "settext",
         "setitem", "setname", "setequip", "equip", "flag", "particle", "anim", "save", "load", "edit", "list", "info",
-        "delete", "export", "share", "import", "close", "reload",
+        "delete", "export", "share", "import", "close", "admin", "reload",
     )
+
+    /** Hidden from tab-complete for players who can't use them. */
+    private val adminSubcommands = setOf("admin", "reload")
+    private val adminActions = listOf("whois", "remove", "purge", "confirm")
 
     private val equipSlots = listOf("head", "chest", "legs", "feet", "mainhand", "offhand")
     private val flagNames = listOf("small", "invisible", "nobaseplate", "nogravity", "arms", "marker", "glowing")
@@ -188,8 +202,11 @@ class AaseCommand(private val plugin: AwesomeArmorStandEditorPlugin) : TabExecut
 
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String> {
         return when (args.size) {
-            1 -> subcommands.filter { it.startsWith(args[0].lowercase()) }
+            1 -> subcommands
+                .filter { it !in adminSubcommands || sender.hasPermission("aase.admin") }
+                .filter { it.startsWith(args[0].lowercase()) }
             2 -> when (args[0].lowercase()) {
+                "admin" -> if (sender.hasPermission("aase.admin")) adminActions.filter { it.startsWith(args[1].lowercase()) } else emptyList()
                 "adddisplay" -> listOf("item", "block", "text").filter { it.startsWith(args[1].lowercase()) }
                 "export" -> listOf("command", "function").filter { it.startsWith(args[1].lowercase()) }
                 "setequip" -> equipSlots.filter { it.startsWith(args[1].lowercase()) }
@@ -203,8 +220,14 @@ class AaseCommand(private val plugin: AwesomeArmorStandEditorPlugin) : TabExecut
             }
             3 -> when (args[0].lowercase()) {
                 "particle" -> if (args[1].equals("add", true)) commonParticles.filter { it.startsWith(args[2].uppercase()) } else emptyList()
+                "admin" -> if (args[1].equals("purge", true) && sender.hasPermission("aase.admin")) {
+                    listOf("8", "16", "32", "64").filter { it.startsWith(args[2]) }
+                } else emptyList()
                 else -> emptyList()
             }
+            4 -> if (args[0].equals("admin", true) && args[1].equals("purge", true) && sender.hasPermission("aase.admin")) {
+                plugin.server.onlinePlayers.map { it.name }.filter { it.startsWith(args[3], ignoreCase = true) }
+            } else emptyList()
             else -> emptyList()
         }
     }
