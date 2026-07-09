@@ -57,7 +57,10 @@ tasks {
     }
 
     processResources {
-        val props = mapOf("version" to version, "description" to project.description)
+        val props = mapOf("version" to version.toString(), "description" to project.description.toString())
+        // Without this the task is UP-TO-DATE across a version bump and ships a stale plugin.yml,
+        // so the jar filename and the version the server logs disagree.
+        inputs.properties(props)
         filesMatching("plugin.yml") {
             expand(props)
         }

@@ -45,7 +45,7 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
 
     fun addStand(player: Player) {
         val session = plugin.sessions.get(player.uniqueId) ?: return noSession(player)
-        if (!checkAddAllowed(player, session)) return
+        if (!checkAddAllowed(player)) return
         val origin = ensureOrigin(session, player)
         val element = ArmorStandElement(localId = session.scene.nextLocalId(), offset = offsetOf(player, origin), yaw = player.location.yaw)
         finishAdd(player, session, element, EditMode.POSE, "add.stand")
@@ -53,7 +53,7 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
 
     fun addDisplay(player: Player, kind: DisplayKind, payload: String) {
         val session = plugin.sessions.get(player.uniqueId) ?: return noSession(player)
-        if (!checkAddAllowed(player, session)) return
+        if (!checkAddAllowed(player)) return
         val origin = ensureOrigin(session, player)
         val element = DisplayElement(
             localId = session.scene.nextLocalId(), offset = offsetOf(player, origin), yaw = player.location.yaw,
@@ -105,9 +105,19 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
                 plugin.placement.apply(entity, element)
             }
             session.mode == EditMode.MOVE -> {
-                element.moveOffset(session.axis, step)
                 val origin = session.origin ?: return
-                entity.teleport(plugin.placement.elementLocation(origin, element))
+                val from = plugin.placement.elementLocation(origin, element)
+                val target = from.clone().add(
+                    if (session.axis == Axis.X) step else 0.0,
+                    if (session.axis == Axis.Y) step else 0.0,
+                    if (session.axis == Axis.Z) step else 0.0,
+                )
+                // Only probe when the element crosses into a new block — sub-block nudges can't
+                // leave a claim, and each probe fires a synthetic event other plugins may log.
+                val crossed = target.blockX != from.blockX || target.blockY != from.blockY || target.blockZ != from.blockZ
+                if (crossed && !checkRegion(player, listOf(target))) return
+                element.moveOffset(session.axis, step)
+                entity.teleport(target)
             }
             element is DisplayElement && session.mode == EditMode.TRANSLATE -> {
                 element.transform = TransformOps.translate(element.transform, session.axis, step)
@@ -201,6 +211,8 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
         val scene = plugin.store.loadByName(player.uniqueId, name)
             ?: return plugin.texts.send(player, "scene.not-found", "name" to name)
         val origin = player.location.clone()
+        if (!checkLimits(player, scene.elements.size)) return
+        if (!checkRegion(player, scenePoints(scene, origin))) return
         if (!firePlace(player, scene, origin)) return plugin.texts.send(player, "share.place-cancelled")
         plugin.sessions.get(player.uniqueId)?.let { plugin.sessions.close(player.uniqueId) }
         val session = plugin.sessions.open(player.uniqueId, scene)
@@ -377,6 +389,8 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
             lastAnchor = null,
         )
         val origin = player.location.clone()
+        if (!checkLimits(player, scene.elements.size)) return
+        if (!checkRegion(player, scenePoints(scene, origin))) return
         if (!firePlace(player, scene, origin)) return plugin.texts.send(player, "share.place-cancelled")
         plugin.sessions.get(player.uniqueId)?.let { plugin.sessions.close(player.uniqueId) }
         val session = plugin.sessions.open(player.uniqueId, scene)
@@ -455,7 +469,7 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
         if (runCatching { Particle.valueOf(type) }.isFailure) {
             return@withSession plugin.texts.send(player, "particle.invalid", "type" to particleType)
         }
-        if (!checkAddAllowed(player, s)) return@withSession
+        if (!checkAddAllowed(player)) return@withSession
         val origin = ensureOrigin(s, player)
         val emitter = ParticleEmitter(id = s.scene.nextEmitterId(), particle = type, offset = offsetOf(player, origin))
         s.scene.emitters += emitter
@@ -532,10 +546,15 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
 
     fun applyFx(player: Player, presetId: String) = withSession(player) { s ->
         val preset = plugin.presets.fx(presetId) ?: return@withSession plugin.texts.send(player, "preset.fx-missing", "id" to presetId)
-        if (!checkAddAllowed(player, s)) return@withSession
+        if (!checkLimits(player, preset.emitters.size)) return@withSession
         val origin = ensureOrigin(s, player)
         // Centre the effect on the selected element if there is one, else on the player.
         val base = s.selected()?.offset ?: offsetOf(player, origin)
+        // The selected element may sit far from the player, so probe where the emitters land.
+        val points = preset.emitters
+            .map { origin.clone().add(base.x + it.offset.x, base.y + it.offset.y, base.z + it.offset.z) }
+            .distinctBy { Triple(it.blockX, it.blockY, it.blockZ) }
+        if (!checkRegion(player, points)) return@withSession
         for (t in preset.emitters) {
             val emitter = ParticleEmitter(
                 id = s.scene.nextEmitterId(), particle = t.particle,
@@ -664,24 +683,52 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
 
     private fun pick(list: List<Double>, index: Int): Double = list[index.mod(list.size)]
 
-    private fun checkAddAllowed(player: Player, session: EditSession): Boolean {
+    /** Quantity caps. [adding] is how many new entities the operation would spawn. */
+    private fun checkLimits(player: Player, adding: Int): Boolean {
+        if (player.hasPermission("aase.bypass.limit")) return true
         val s = plugin.settings
-        if (!player.hasPermission("aase.bypass.limit")) {
-            if (plugin.registry.ownerCount(player.uniqueId) >= s.limitPerPlayer) {
-                plugin.texts.send(player, "limit.per-player", "max" to s.limitPerPlayer.toString()); return false
-            }
-            if (plugin.registry.total() >= s.limitGlobal) {
-                plugin.texts.send(player, "limit.global"); return false
-            }
-            if (plugin.registry.countInChunk(player.location.chunk) >= s.limitPerChunk) {
-                plugin.texts.send(player, "limit.per-chunk", "max" to s.limitPerChunk.toString()); return false
-            }
+        if (plugin.registry.ownerCount(player.uniqueId) + adding > s.limitPerPlayer) {
+            plugin.texts.send(player, "limit.per-player", "max" to s.limitPerPlayer.toString()); return false
         }
-        if (!player.hasPermission("aase.bypass.region") && !plugin.guard.canBuild(player, player.location)) {
-            plugin.texts.send(player, "region.denied"); return false
+        if (plugin.registry.total() + adding > s.limitGlobal) {
+            plugin.texts.send(player, "limit.global"); return false
+        }
+        if (plugin.registry.countInChunk(player.location.chunk) + adding > s.limitPerChunk) {
+            plugin.texts.send(player, "limit.per-chunk", "max" to s.limitPerChunk.toString()); return false
         }
         return true
     }
+
+    /**
+     * Land-protection gate: every block our entities would occupy must be buildable by [player].
+     *
+     * We spawn entities with world.spawn(), which fires no vanilla placement event — a land plugin
+     * never sees our writes and cannot veto them on its own. This guard is the only thing standing
+     * between a player and someone else's claim, so it must run at *every* site that spawns or
+     * teleports an element.
+     */
+    private fun checkRegion(player: Player, points: Collection<Location>): Boolean {
+        if (player.hasPermission("aase.bypass.region")) return true
+        if (points.all { plugin.guard.canBuild(player, it) }) return true
+        plugin.texts.send(player, "region.denied")
+        return false
+    }
+
+    /**
+     * One probe per distinct block the scene reaches. See [ScenePoints] for what counts.
+     *
+     * ponytail: each probe reads Location.block, which loads that chunk if it isn't already. Real
+     * scenes sit around the player so this is a no-op; a scene with a keyframe hundreds of blocks
+     * out would sync-load a chunk on an explicit /aase load. Batch by chunk if that ever bites.
+     */
+    private fun scenePoints(scene: Scene, origin: Location): List<Location> =
+        ScenePoints.offsets(scene)
+            .map { origin.clone().add(it.x, it.y, it.z) }
+            .distinctBy { Triple(it.blockX, it.blockY, it.blockZ) }
+
+    /** Gate for adding one element at the player's own feet. */
+    private fun checkAddAllowed(player: Player): Boolean =
+        checkLimits(player, 1) && checkRegion(player, listOf(player.location))
 
     private fun ensureOrigin(session: EditSession, player: Player) =
         session.origin ?: player.location.clone().also { session.origin = it }

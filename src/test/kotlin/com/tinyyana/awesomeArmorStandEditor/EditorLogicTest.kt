@@ -5,6 +5,7 @@ import com.tinyyana.awesomeArmorStandEditor.edit.BodyPart
 import com.tinyyana.awesomeArmorStandEditor.edit.InterpolationOps
 import com.tinyyana.awesomeArmorStandEditor.edit.PoseOps
 import com.tinyyana.awesomeArmorStandEditor.edit.QuatMath
+import com.tinyyana.awesomeArmorStandEditor.edit.ScenePoints
 import com.tinyyana.awesomeArmorStandEditor.edit.TransformOps
 import com.tinyyana.awesomeArmorStandEditor.model.Anchor
 import com.tinyyana.awesomeArmorStandEditor.model.Animation
@@ -165,5 +166,23 @@ class EditorLogicTest {
         // scale clamps to the positive minimum
         val s = TransformOps.scaleAxis(Transform.IDENTITY, Axis.X, -100.0)
         assertTrue(s.scale.x >= 0.05)
+    }
+
+    @Test
+    fun scenePointsCoverEveryPlaceAnEntityCanLand() {
+        val scene = Scene(id = "s", owner = "o", name = "n")
+        scene.elements += ArmorStandElement(localId = 1, offset = Vec3(1.0, 0.0, 0.0))
+        scene.emitters += ParticleEmitter(id = 1, particle = "FLAME", offset = Vec3(0.0, 0.0, 7.0))
+        // An imported share code can carry keyframes that fling the element far from the origin.
+        scene.animation = Animation(
+            tracks = mutableListOf(Track(1, mutableListOf(Keyframe(tick = 0, offset = Vec3(80.0, 0.0, 0.0))))),
+        )
+
+        val offsets = ScenePoints.offsets(scene)
+
+        assertTrue(Vec3.ZERO in offsets, "origin must be probed")
+        assertTrue(Vec3(1.0, 0.0, 0.0) in offsets, "element must be probed")
+        assertTrue(Vec3(0.0, 0.0, 7.0) in offsets, "emitter must be probed")
+        assertTrue(Vec3(80.0, 0.0, 0.0) in offsets, "animated position must be probed")
     }
 }

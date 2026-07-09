@@ -21,8 +21,18 @@ object PermissiveGuard : RegionGuard {
  * Universal guard: fires a synthetic [BlockPlaceEvent] and honours any land plugin's veto
  * (GriefPrevention/WorldGuard/Towny/Lands all listen to it). No block is actually placed.
  *
+ * This is a *permission query*, not a re-enactment of how our entities appear. We create elements
+ * with world.spawn(), which fires no vanilla placement event at all — a land plugin never sees the
+ * spawn and so can never veto it directly. The probe asks the equivalent question ("would you let
+ * this player build at this block?") and we obey the answer ourselves. Every code path that spawns
+ * or teleports an element must call this; nothing downstream will catch a missed one.
+ *
  * Must be called on the main thread (edit handlers already are). The event constructor is the
- * public non-deprecated one; EntityPlaceEvent is @ApiStatus.Internal, so we use BlockPlaceEvent.
+ * public non-deprecated one; EntityPlaceEvent is @ApiStatus.Internal and needs an already-spawned
+ * entity, so it cannot serve as a pre-check.
+ *
+ * Known cost: block loggers (CoreProtect et al.) may record the probe. The placed block is the AIR
+ * the player stands in, so most filter it out.
  */
 class EventProbeGuard : RegionGuard {
     override fun canBuild(player: Player, location: Location): Boolean {

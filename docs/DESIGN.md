@@ -107,11 +107,17 @@ com.tinyyana.awesomeArmorStandEditor
 ## 6. 領地尊重(RegionGuard)
 
 ```
-interface RegionGuard { fun canEdit(player, location): Result  // ALLOW / DENY(reason) }
+interface RegionGuard { fun canBuild(player, location): Boolean }
 ```
-- `EventProbeGuard`(預設、通用):放置/編輯前於同步執行緒模擬一次保護事件,凡是會攔 place/interact 的領地插件(GP/WorldGuard/Towny/Lands…)自動生效。探針事件不落地、不改世界。
+
+**為什麼需要探針。** 我們用 `world.spawn()` 直接生成盔甲座與 Display,這**不會觸發任何原版放置事件**(`BlockPlaceEvent` 是方塊的;`EntityPlaceEvent` 標記為 internal 且需要已生成的實體,無法當前置檢查)。也就是說領地插件從頭到尾看不到我們的寫入,不可能替我們否決。所以 guard 不是「模擬我們的行為」,而是**主動去問**領地插件一個等價問題:「這個玩家可以在這一格蓋東西嗎?」然後由我們自己遵守答案。
+
+**推論:每一個生成或傳送元件的地方都必須自己呼叫 guard。** 漏掉一個,那條路徑就完全沒有保護,而且不會有任何下游機制補救。(0.2.0 就是這樣漏了 `load` / `import` / MOVE / `fx` 四條。)
+
+- `EventProbeGuard`(預設、通用):於同步執行緒發一個合成 `BlockPlaceEvent`,凡是會攔 place 的領地插件(GP/WorldGuard/Towny/Lands…)自動生效。探針事件不落地、不改世界。已知代價:方塊紀錄插件(CoreProtect 等)可能記到這筆探針,放置的方塊是玩家腳下的空氣,多數會被濾掉。
 - `GriefPreventionBridge` / `WorldGuardBridge`(選用、反射):偵測到插件才載入,提供更精準的拒絕訊息與 claim owner 判斷。
-- 疊加規則:先擁有權(PDC owner)→ 再 RegionGuard → 再數量上限。任一拒絕即擋。
+- 疊加規則:先擁有權(PDC owner)→ 再數量上限 → 再 RegionGuard。任一拒絕即擋。
+- 整個場景落地(`load` / `import`)時,探測點由 `ScenePoints.offsets()` 列舉:原點 + 每個元件 + 每個粒子發射器 + **每個動畫關鍵影格的位移**(匯入的分享碼可以夾帶把元件甩進遠處領地的 keyframe),再依方塊座標去重。
 - `aase.bypass.region` 權限可略過(管理/創造服)。
 
 > ⚠ 合成事件探針的事件建構子簽章需對 26.2 逐一驗證(見 API 驗證表);若某事件建構子不穩,該類回退到「橋接優先 + 權限」策略,不硬送不穩的合成事件。

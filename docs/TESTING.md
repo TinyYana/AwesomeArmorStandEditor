@@ -31,8 +31,24 @@ Spigot 相容性:編譯只用 Bukkit/Spigot API 面,Adventure 以 shade+relocate
 1. `/aase reload` — 應回「設定已重載」,無報錯。
 2. 權限:預設 `aase.use`/`aase.create.*` 給所有人;`aase.admin`/`aase.bypass.*` 給 OP。用非 OP 帳號確認 bypass 無效、限制生效。
 3. 數量上限:把 `config.yml` `limits.per-player` 調小(如 3)→ reload → 連續 `/aase addstand` 超過即被擋(「數量已達上限」)。
-4. 領地:在 GriefPrevention/WorldGuard 別人的領地內 `/aase addstand` 應被擋(「這裡受保護」);`region.event-probe: false` 則不擋。
+4. 領地(需要 GriefPrevention/WorldGuard,且測試帳號**不是 OP**——OP 有 `aase.bypass.region`)。
+   準備:玩家 A 用金鏟圈一塊領地;玩家 B 站進 A 的領地內。以 B 的身分逐條測,每條都該回「這裡受保護」且**地上不留任何東西**:
+   1. `/aase addstand`
+   2. `/aase load <B 自己存的作品>` — 存檔是 B 的,但落點在 A 的地
+   3. `/aase import <B 自己產的分享碼>`
+   4. `/aase fx <任一特效>`(先在領地外開 session、選一個元件,再走進來)
+   5. `/aase particle add FLAME`
+
+   跨界搬運:B 在領地**外**放一個盔甲座 → 拿工具切 MOVE 模式 → 朝 A 的領地方向推。
+   元件應停在領地邊界前一格,越界的那一下被擋(「這裡受保護」),元件不會進去。
+
+   動畫夾帶:在領地外做一個帶動畫的作品,把某個 keyframe 的位置拉進 A 的領地 → 存檔 → `/aase load`。
+   應在放置階段就被擋掉,而不是等播放時才把元件甩進去。
+
+   最後把 `region.event-probe: false` → `/aase reload` → 上面每一條都應該放行(確認開關真的有效)。
+
 5. 效能:反覆放置/編輯時開 Spark 或 `/tps`,確認無掉 TPS(不應有 chunk 掃描)。
+   MOVE 模式連續微調時,只有跨越方塊邊界的那一下會發探針事件;若裝了 CoreProtect,確認不會被洗版。
 
 ### 玩家視角(遊戲內手冊)
 
