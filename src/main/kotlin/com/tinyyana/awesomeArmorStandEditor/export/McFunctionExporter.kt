@@ -17,10 +17,11 @@ import com.tinyyana.awesomeArmorStandEditor.model.Scene
  */
 object McFunctionExporter {
 
-    private const val NS = "aase"
+    const val NS = "aase"
     private const val FRAME_STEP = 2
 
-    fun export(scene: Scene): Map<String, String> {
+    /** [readme] is passed in already translated — this stays a pure Scene -> files function. */
+    fun export(scene: Scene, readme: String): Map<String, String> {
         val files = LinkedHashMap<String, String>()
         val prefix = "aase_" + scene.id.replace("-", "").take(8) + "_"
 
@@ -32,7 +33,7 @@ object McFunctionExporter {
         if (anim != null && anim.tracks.isNotEmpty() && anim.lengthTicks > 0) buildAnimation(files, scene, anim, prefix)
 
         files["pack.mcmeta"] = "{\"pack\":{\"pack_format\":57,\"description\":\"AASE export: ${scene.name}\"}}\n"
-        files["README.txt"] = readme(anim != null)
+        files["README.txt"] = readme
         return files
     }
 
@@ -75,16 +76,5 @@ object McFunctionExporter {
         files["data/$NS/function/load.mcfunction"] =
             "scoreboard objectives add aase_t dummy\nscoreboard players set #t aase_t 0\n" +
                 "# then run:  function $NS:summon   and   function $NS:tick\n"
-    }
-
-    private fun readme(animated: Boolean): String = buildString {
-        append("AwesomeArmorStandEditor 匯出的資料包(最佳努力)\n\n")
-        append("放進世界的 datapacks/<名稱>/,或 .minecraft 的 datapack 目錄。\n")
-        append("- function $NS:summon  在你站的位置召喚整個場景\n")
-        if (animated) {
-            append("- function $NS:load    初始化計時器(播動畫前先跑一次)\n")
-            append("- function $NS:tick    啟動關鍵影格播放(每 tick 自我排程)\n")
-        }
-        append("\n注意:pack_format 與 function 資料夾名稱依 MC 版本可能要調整;NBT 為最佳努力。\n")
     }
 }

@@ -51,12 +51,14 @@
 ```
 plugins/AwesomeArmorStandEditor/
   config.yml      行為/效能設定
-  messages.yml    所有玩家可見文字(可翻譯)
+  lang/zh_TW.yml  繁體中文的玩家可見文字(含遊戲內手冊頁面)
+  lang/en.yml     英文的同一份
   presets.yml     姿勢與特效範本(可自由增改)
-  guide.yml       遊戲內手冊頁面
   scenes/         你的存檔(每人一個資料夾)
   exports/        匯出的指令/資料包
 ```
+
+**語言**由 `config.yml` 的 `language` 決定,全服一種:`auto`(預設,看伺服器 JVM 的地區設定——中文語系給 `zh_TW`,其餘給 `en`)、`zh_TW`、`en`。兩份語言檔都會產生(方便你對照、或切過去前先改好),只有選中的那份會被讀取;想自訂就直接改它。
 
 改完設定用 `/aase reload`(不用重啟)。
 
@@ -335,12 +337,13 @@ aase.bypass.limit        略過數量上限 — 預設 OP
 
 ## 17. 設定檔
 
-- **config.yml**:工具材質、步進大小、每人/每區塊/全域數量上限、領地事件探針開關、粒子預算與範圍、`admin.max-purge-radius`(管理員清除半徑上限,預設 64)。
-- **presets.yml**:姿勢與特效範本(角度用度,可增改;`/aase pose save` 會寫進這裡)。
-- **messages.yml**:所有玩家可見文字(MiniMessage,可翻譯;指令名 `<aqua>`、點擊提示 `<yellow>`)。
-- **guide.yml**:遊戲內翻頁手冊的每一頁(書是紙底色,用深色)。
+- **config.yml**:`language`(`auto` / `zh_TW` / `en`)、工具材質、步進大小、每人/每區塊/全域數量上限、領地事件探針開關、粒子預算與範圍、`admin.max-purge-radius`(管理員清除半徑上限,預設 64)。
+- **presets.yml**:姿勢與特效範本(角度用度,可增改;`/aase pose save` 會寫進這裡)。範本的**顯示名**由語言檔的 `preset.name.<id>` 決定;自己存的範本沒有這個 key,就直接顯示 presets.yml 裡的 `name`。
+- **lang/zh_TW.yml、lang/en.yml**:所有玩家可見文字(MiniMessage;指令名 `<aqua>`、點擊提示 `<yellow>`),連同 `guide.pages`(遊戲內翻頁手冊,書是紙底色,請用深色)。要加語言就複製一份改檔名,再把 `language` 指過去。
 
 全部 `/aase reload` 生效,不用重啟。
+
+> 從 0.x 升上來:舊的 `messages.yml` / `guide.yml` 不再被讀取,啟動時會在 log 提醒你。把改過的字搬進 `lang/<代碼>.yml` 之後就能刪掉。
 
 ## 18. 疑難排解 FAQ
 

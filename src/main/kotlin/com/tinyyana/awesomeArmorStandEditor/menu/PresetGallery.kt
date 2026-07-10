@@ -44,8 +44,8 @@ class PresetGallery(private val plugin: AwesomeArmorStandEditorPlugin) : Listene
         inv.setItem(SLOT_FX_LABEL, icon(Material.BLAZE_POWDER, texts.legacy("gallery.fx-label")))
 
         val hint = texts.legacy("gallery.apply-hint")
-        for ((s, id) in poseSlots) plugin.presets.pose(id)?.let { inv.setItem(s, named(it.icon, it.name, hint)) }
-        for ((s, id) in fxSlots) plugin.presets.fx(id)?.let { inv.setItem(s, named(it.icon, it.name, hint)) }
+        for ((s, id) in poseSlots) plugin.presets.pose(id)?.let { inv.setItem(s, named(it.icon, texts.presetName(it.id, it.name), hint)) }
+        for ((s, id) in fxSlots) plugin.presets.fx(id)?.let { inv.setItem(s, named(it.icon, texts.presetName(it.id, it.name), hint)) }
 
         player.openInventory(inv)
     }

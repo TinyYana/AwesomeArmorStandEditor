@@ -5,9 +5,8 @@ import com.tinyyana.awesomeArmorStandEditor.model.Pose6
 
 enum class Axis { X, Y, Z }
 
-enum class BodyPart(val display: String) {
-    HEAD("頭"), BODY("身"), LEFT_ARM("左臂"), RIGHT_ARM("右臂"), LEFT_LEG("左腿"), RIGHT_LEG("右腿");
-}
+/** Display names live in the lang files under `part.<lowercase name>`. */
+enum class BodyPart { HEAD, BODY, LEFT_ARM, RIGHT_ARM, LEFT_LEG, RIGHT_LEG }
 
 /** Pure armor-stand pose math (degrees at the UI, radians in the model). Server-independent, unit-tested. */
 object PoseOps {

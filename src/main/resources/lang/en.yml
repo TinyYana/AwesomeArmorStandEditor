@@ -1,0 +1,450 @@
+# AwesomeArmorStandEditor — English (MiniMessage)
+# Every player-facing string lives here. Switch languages with `language` in config.yml
+# (auto / zh_TW / en). Edit this file freely, then /aase reload.
+
+prefix: "<gold>✎</gold> "
+
+system:
+  no-permission: "<red>You don't have permission to do that"
+  player-only: "<red>That command can only be run by a player"
+
+reload:
+  ok: "<green>Config reloaded"
+
+usage:
+  new: "<gray>Usage: <aqua>/aase new <name>"
+  load: "<gray>Usage: <aqua>/aase load <name>"
+  adddisplay: "<gray>Usage: <aqua>/aase adddisplay <item|block|text>"
+  setequip: "<gray>Usage: <aqua>/aase setequip <head|chest|legs|feet|mainhand|offhand>"
+  flag: "<gray>Usage: <aqua>/aase flag <small|invisible|nobaseplate|nogravity|arms|marker|glowing>"
+  particle: "<gray>Usage: <aqua>/aase particle add <particle type></aqua> or <aqua>/aase particle clear"
+  anim: "<gray>Usage: <aqua>/aase anim <key tick|length ticks|loop|play|stop|clear>"
+  export: "<gray>Usage: <aqua>/aase export <command|function>"
+  pose: "<gray>Usage: <aqua>/aase pose <preset id></aqua> to apply, or <aqua>/aase pose save <id> [name]</aqua> to save your own"
+  fx: "<gray>Usage: <aqua>/aase fx <effect id></aqua> (see the list with <aqua>/aase presets</aqua>)"
+  import: "<gray>Usage: <aqua>/aase import <share code> [new name]</aqua> (get a code with <aqua>/aase share</aqua>)"
+  admin: "<gray>Usage: <aqua>/aase admin <whois|remove|purge <radius> [player]|confirm>"
+  clear: "<gray>Usage: <aqua>/aase clear <radius></aqua> (removes other people's elements where you may build)"
+
+# Admin tools (/aase admin, permission aase.admin): dealing with other people's builds
+admin:
+  no-target: "<red>No element placed by this plugin nearby (hand-placed vanilla armor stands aren't ours)"
+  whois: "<gray>Owner <white>{owner}</white> · scene <white>{scene}</white> · element <white>#{id}"
+  whois-where: "<gray>At <white>{world} {x} {y} {z}</white>{extra}"
+  whois-emitter: " <dark_gray>(particle emitter)"
+  scene-missing: "deleted save"
+  removed-one: "<green>Force-removed <white>{owner}</white>'s element <white>#{id}"
+  owner-not-found: "<red>No such player: <white>{name}"
+  purge-none: "<gray>Nothing to remove within {radius} blocks"
+  purge-preview: "<yellow><white>{count}</white> element(s){owner} within <white>{radius}</white> blocks will be removed"
+  purge-preview-owner: " owned by {owner}"
+  purge-confirm-hint: "<gray>Type <aqua>/aase admin confirm</aqua> within 60 seconds to confirm"
+  purge-none-pending: "<red>Nothing pending — run <aqua>/aase admin purge <radius></aqua> first"
+  purge-expired: "<red>Confirmation timed out, run <aqua>/aase admin purge</aqua> again"
+  purge-done: "<green>Removed <white>{count}</white> element(s) (their saves are untouched — they can place them again)"
+  loaded-only: "<dark_gray>Only affects elements in loaded chunks"
+
+clear:
+  none: "<yellow>Nothing you may remove within {radius} blocks (delete your own builds in the editor; other people's claims aren't yours to clear)"
+  done: "<green>Removed <white>{count}</white> element(s) from: <white>{owners}</white><gray> (their saves are untouched — they can place them again)"
+
+session:
+  none: "<red>No scene in progress — start one with <aqua>/aase new <name></aqua>"
+  closed: "<green>Editing finished (the build stays in the world)"
+
+scene:
+  new: "<green>Created scene <white>{name}</white> — start placing"
+  saved: "<green>Saved <white>{name}</white> ({count} elements)"
+  loaded: "<green>Placed <white>{name}</white> ({count} elements)"
+  not-found: "<red>No scene named <white>{name}</white>"
+
+add:
+  stand: "<green>Added armor stand <white>#{id}"
+  display: "<green>Added display <white>#{id}"
+
+select:
+  none: "<yellow>Right-click an element to select it first"
+  other-scene: "<red>That element belongs to a different scene"
+
+edit:
+  begin: "<green>Now editing existing build <white>{name}"
+  no-target: "<red>No editable element nearby"
+  no-scene: "<red>No save found for this element"
+  not-owner: "<red>That's not your build"
+
+delete:
+  ok: "<green>Deleted element <white>#{id}"
+
+limit:
+  per-player: "<red>You've hit your element cap ({max})"
+  global: "<red>The server's total element cap has been reached"
+  per-chunk: "<red>This chunk has hit its element cap ({max})"
+
+region:
+  denied: "<red>This area is protected — you can't place or edit here"
+
+payload:
+  wrong-kind: "<red>The selected element isn't that kind of display"
+  offhand-empty: "<yellow>Hold the item you want in your off-hand, then run it again"
+  set: "<green>Contents updated"
+
+name:
+  only-stand: "<red>Only armor stands can be named"
+  set: "<green>Name updated"
+
+equip:
+  only-stand: "<red>Only armor stands can wear equipment"
+  bad-slot: "<red>Unknown equipment slot"
+  set: "<green>Updated the <white>{slot}</white> slot (from your off-hand item)"
+  hint: "<yellow>Hold an item in your off-hand, then run <aqua>/aase setequip <head|chest|legs|feet|mainhand|offhand>"
+
+equip-menu:
+  title: "Equipment · pick up an item, then click a slot"
+  only-stand: "<red>Right-click an armor stand first to open the equipment menu"
+  info: "<gold>How to: click an item in your inventory below (it goes to the cursor) → click a slot to equip; click a slot with an empty cursor to unequip. Nothing is consumed"
+  head: "<white>Helmet"
+  chest: "<white>Chestplate"
+  legs: "<white>Leggings"
+  feet: "<white>Boots"
+  mainhand: "<white>Main hand"
+  offhand: "<white>Off hand"
+  empty-hint: "<gray>Pick an item up onto your cursor first, then click here to equip"
+  filled-hint: "<gray>Click holding an item = swap · click with an empty cursor = unequip"
+  back: "<yellow>← Back to the panel"
+
+flag:
+  only-stand: "<red>Only armor stands have these toggles"
+  toggled: "<green>Toggled <white>{flag}"
+
+export:
+  empty: "<yellow>This scene has no elements yet"
+  click: "<yellow>[Click to copy the summon command to your clipboard]"
+  saved: "<gray>Also written to a file: <white>{path}"
+  mcfunction-saved: "<green>Exported the mcfunction datapack to <white>{path}"
+
+share:
+  click: "<yellow>[Click to copy the share code to your clipboard]"
+  hint: "<gray>Give this code to someone — <aqua>/aase import <code></aqua> gets them the same build"
+  import-bad: "<red>That share code is invalid or corrupt — check you copied all of it"
+  import-too-big: "<red>That build has too many elements (over your cap of {max}) to import"
+  imported: "<green>Imported and placed <white>{name}</white> ({count} elements) — remember to <aqua>/aase save</aqua>"
+  place-cancelled: "<red>You can't place a build here"
+
+info:
+  header: "<gold>◆ Scene: <white>{name}"
+  elements: "<gray>Elements <white>{count}</white> (armor stands {stands} · displays {displays})"
+  emitters: "<gray>Particle emitters <white>{count}"
+  anim: "<gray>Animation <white>{len}</white> ticks · {tracks} track(s) · loop {loop}"
+  selected: "<gray>Selected <white>#{id}</white> ({type})"
+  dirty: "<gray>Status: <white>{state}"
+
+particle:
+  invalid: "<red>Unknown particle type <white>{type}</white> (tab-complete to see the list)"
+  added: "<green>Added a particle emitter <white>{type}"
+  cleared: "<green>Cleared every particle emitter in this scene"
+
+anim:
+  key: "<green>Keyframed element <white>#{id}</white> at tick <white>{tick}"
+  length: "<green>Animation length set to <white>{ticks}</white> ticks"
+  loop-on: "<green>Animation loop: on"
+  loop-off: "<green>Animation loop: off"
+  playing: "<green>Playing (stop it with <aqua>/aase anim stop</aqua>)"
+  stopped: "<green>Stopped — elements are back to their saved state"
+  cleared: "<green>Animation cleared"
+  empty: "<yellow>No keyframes yet — record one with <aqua>/aase anim key 0</aqua>"
+
+preset:
+  only-stand: "<red>Right-click an armor stand first to apply a pose preset"
+  pose-missing: "<red>No such pose preset: <white>{id}"
+  pose-applied: "<green>Applied pose <white>{name}</white> (fine-tune it with the tool, or mirror it with <aqua>/aase mirror</aqua>)"
+  fx-missing: "<red>No such effect preset: <white>{id}"
+  fx-applied: "<green>Added effect <white>{name}"
+  mirrored: "<green>Mirrored the left limbs onto the right"
+  pose-saved: "<green>Saved the current pose as preset <white>{id}</white> — recall it with <aqua>/aase pose {id}</aqua>"
+  # Display names for the built-in presets. The key is the id in presets.yml; anything without a
+  # key here (e.g. poses saved with /aase pose save) falls back to the name in presets.yml.
+  name:
+    stand: "Standing"
+    tpose: "T-Pose"
+    cheer: "Cheer"
+    wave: "Wave"
+    point: "Point Forward"
+    think: "Thinking"
+    sit: "Sitting (floating)"
+    run: "Running"
+    flame_aura: "Flame Aura"
+    hearts: "Hearts"
+    cherry: "Cherry Blossom"
+    sparkle: "Stardust"
+    soul: "Soul Flame"
+
+gallery:
+  title: "Presets · click to apply"
+  info: "<gold>Pick a preset — the top row poses the selected stand, the bottom row adds effects"
+  poses-label: "<aqua>Pose presets ↑"
+  fx-label: "<aqua>Effect presets ↑"
+  mirror: "<yellow>Mirror (left/right symmetry)"
+  close: "<gray>Close"
+  apply-hint: "<yellow>Click to apply"
+
+tool:
+  name: "<gold>Armor Stand Editor Tool"
+  given: "<green>Here's the editor tool — right-click an element to select, left/right click to nudge"
+  lore1: "<gray>Left click <white>−  <gray>Right click <white>+"
+  lore2: "<gray>Scroll <white>step size  <gray>Sneak+scroll <white>axis"
+  lore3: "<gray>Sneak+left <white>mode  <gray>Sneak+right <white>body part"
+  lore4: "<gray>Right-click an element <white>to select"
+
+display:
+  default-text: "Text"
+
+list:
+  empty: "<yellow>You have no saves yet — start one with <aqua>/aase new <name></aqua>"
+  header: "<gold>Your scenes ({count})"
+  entry: "<gray>· <white>{name} <dark_gray>({count} elements)"
+
+help:
+  header: "<gold>AwesomeArmorStandEditor commands"
+  opened-book: "<gray>Opened the manual — flip through it; <aqua>/aase guide</aqua> brings it back any time"
+  tool: "<aqua>/aase tool <gray>get the editor tool"
+  presets: "<aqua>/aase presets <gray>preset gallery: can't pose? click a pose or effect"
+  new: "<aqua>/aase new <name> <gray>start a new scene"
+  addstand: "<aqua>/aase addstand <gray>add an armor stand"
+  adddisplay: "<aqua>/aase adddisplay <item|block|text> <gray>add a display"
+  controls: "<gray>Tool: left/right click to nudge, scroll for step size, sneak+scroll for axis, sneak+left for mode"
+  equip: "<aqua>/aase equip <gray>open the equipment menu"
+  save: "<aqua>/aase save <gray>save the current scene"
+  load: "<aqua>/aase load <name> <gray>place a copy at your feet"
+  edit: "<aqua>/aase edit <gray>bind to and edit an existing build nearby"
+  list: "<aqua>/aase list <gray>list your scenes"
+  info: "<aqua>/aase info <gray>show info about the current scene"
+  export: "<aqua>/aase export command <gray>export a summon command"
+  share: "<aqua>/aase share <gray>generate a share code"
+  import: "<aqua>/aase import <code> [name] <gray>import someone's share code"
+  close: "<aqua>/aase close <gray>finish editing (the build stays)"
+
+panel:
+  title: "Armor Stand Editor"
+  info: "<gold>Scene <white>{name} <dark_gray>| selected <white>{sel}"
+  add-stand: "<green>+ Armor stand"
+  add-item: "<green>+ Item display"
+  add-block: "<green>+ Block display"
+  add-text: "<green>+ Text display"
+  mode-move: "<aqua>Mode: move"
+  mode-pose: "<aqua>Mode: pose"
+  mode-translate: "<aqua>Mode: translate"
+  mode-rotate: "<aqua>Mode: rotate"
+  mode-scale: "<aqua>Mode: scale"
+  part-head: "<white>Part: head"
+  part-body: "<white>Part: body"
+  part-left_arm: "<white>Part: left arm"
+  part-right_arm: "<white>Part: right arm"
+  part-left_leg: "<white>Part: left leg"
+  part-right_leg: "<white>Part: right leg"
+  axis-x: "<red>Axis: X"
+  axis-y: "<green>Axis: Y"
+  axis-z: "<blue>Axis: Z"
+  step-down: "<yellow>Step −"
+  step-up: "<yellow>Step +"
+  nudge-down: "<red>Nudge −"
+  nudge-up: "<green>Nudge +"
+  flag-small: "<white>Small"
+  flag-invisible: "<white>Invisible"
+  flag-nobaseplate: "<white>No base plate"
+  flag-nogravity: "<white>No gravity"
+  flag-arms: "<white>Arms"
+  flag-marker: "<white>Marker (no hitbox)"
+  flag-glowing: "<white>Glowing"
+  equip: "<yellow>Equipment (opens a menu: hold an item, click a slot)"
+  presets: "<gold>✦ Preset gallery (can't pose? click here)"
+  guide: "<gold>📖 Manual"
+  save: "<green>Save"
+  export: "<aqua>Export summon command"
+  delete: "<red>Delete selected element"
+  close: "<gray>Close"
+
+# The live readout on the action bar while holding the tool
+readout:
+  none: "<gray>Nothing selected · right-click an element to select it"
+
+label:
+  armorstand: "Stand"
+  display: "Display"
+  axis: "Axis"
+  step: "Step"
+  on: "on"
+  off: "off"
+  unsaved: "unsaved changes"
+  saved: "saved"
+
+mode:
+  move: "Move"
+  pose: "Pose"
+  translate: "Translate"
+  rotate: "Rotate"
+  scale: "Scale"
+
+part:
+  head: "Head"
+  body: "Body"
+  left_arm: "L arm"
+  right_arm: "R arm"
+  left_leg: "L leg"
+  right_leg: "R leg"
+
+# README.txt inside the datapack that /aase export function writes
+export-readme:
+  head: |-
+    AwesomeArmorStandEditor datapack export (best effort)
+
+    Drop it in your world's datapacks/<name>/, or a .minecraft datapack folder.
+    - function {ns}:summon  summons the whole scene where you stand
+  anim: |-
+    - function {ns}:load    initializes the timer (run once before playing)
+    - function {ns}:tick    starts keyframe playback (reschedules itself every tick)
+  foot: |-
+    Note: pack_format and the function folder name are version-sensitive; NBT is best-effort.
+
+# The in-game manual (/aase guide gives a paginated book). Each item = one page, MiniMessage.
+# The book has a parchment background — use dark colors (<black>/<dark_*>); white is invisible.
+# Pages are narrow (~19 characters, 13 lines). Keep them short.
+guide:
+  book-title: "Armor Stand Editor Manual"
+  pages:
+    - |-
+      <dark_gray>◆ AASE Guide ◆
+
+      <black>Never posed one?
+      Three steps:
+
+      <dark_green>1<black> /aase new name
+      <dark_green>2<black> /aase addstand
+      <dark_green>3<black> /aase presets
+
+      <black>Pick a stand, then
+      click a preset.
+      <gray>Turn the page →
+    - |-
+      <dark_gray>① Start a build
+
+      <dark_blue>/aase new <name>
+      <black>New scene
+
+      <dark_blue>/aase tool
+      <black>Get the tool
+
+      <black>Hold it, <dark_red>right
+      click<black> a stand
+      = select it
+      <gray>(select to edit)
+    - |-
+      <dark_gray>② Preset gallery
+
+      <dark_blue>/aase presets
+      <black>Opens a menu
+
+      <dark_green>Top row<black> = poses
+      <dark_green>Bottom<black> = effects
+      <dark_aqua>Mirror<black> = symmetry
+
+      <black>Keep your pose:
+      <dark_blue>/aase pose save id
+    - |-
+      <dark_gray>③ Fine-tune
+
+      <black>Holding the tool:
+      <dark_red>Left<black> − · <dark_green>Right<black> +
+      <black>Scroll: step size
+      Sneak+scroll: axis
+      Sneak+left: mode
+      Sneak+right: part
+
+      <gray>Watch the bar at
+      the bottom
+    - |-
+      <dark_gray>④ Control panel
+
+      <dark_blue>/aase
+      <black>Opens the panel:
+      · mode/part/axis
+      · nudge +/−
+      · flags (invisible)
+      · equipment
+      · presets
+      · save / export /
+        delete
+    - |-
+      <dark_gray>⑤ Equipment
+
+      <dark_blue>/aase equip
+      <black>Opens the menu:
+      click an item in
+      your inventory
+      (to the cursor),
+      then click a slot
+      = equip; empty
+      cursor = unequip
+
+      <black>Flags:
+      <dark_blue>/aase flag small
+    - |-
+      <dark_gray>⑥ Particle FX
+
+      <dark_blue>/aase particle
+        add FLAME
+      <black>Adds an emitter
+
+      <dark_blue>/aase particle clear
+      <black>Removes all
+
+      <gray>The gallery's
+      bottom row is
+      faster
+    - |-
+      <dark_gray>⑦ Animation
+
+      <black>Pose, then key it:
+      <dark_blue>/aase anim key 0
+      <black>Repose, then →
+      <dark_blue>/aase anim key 20
+      <dark_blue>/aase anim length 20
+      <dark_blue>/aase anim play
+
+      <black>stop · loop
+    - |-
+      <dark_gray>⑧ Save & share
+
+      <dark_blue>/aase save<black> save
+      <dark_blue>/aase load name<black> place
+      <dark_blue>/aase list<black> your saves
+      <dark_blue>/aase info<black> scene info
+
+      <black>Share it:
+      <dark_blue>/aase share<black> get code
+      <dark_blue>/aase import code
+    - |-
+      <dark_gray>⑨ Export
+
+      <black>These two write
+      files on the
+      server — admins
+      and builders only
+      by default:
+
+      <dark_blue>/aase export command
+      <dark_blue>/aase export function
+      <dark_blue>/aase pose save id
+    - |-
+      <dark_gray>⑩ Reminders
+
+      <black>· Only your own
+      · Land claims are
+        respected
+      · Builds stay in
+        the world
+      · <dark_blue>/aase close<black> ends
+
+      <gray>Full manual:
+      docs/MANUAL.en.md
+
+      <black>Have fun!

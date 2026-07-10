@@ -53,7 +53,7 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
             SLOT_ADD_STAND -> guarded(player, "aase.create.armorstand") { controller.addStand(player) }
             SLOT_ADD_ITEM -> guarded(player, "aase.create.display") { controller.addDisplay(player, DisplayKind.ITEM, itemPayload(player)) }
             SLOT_ADD_BLOCK -> guarded(player, "aase.create.display") { controller.addDisplay(player, DisplayKind.BLOCK, "minecraft:stone") }
-            SLOT_ADD_TEXT -> guarded(player, "aase.create.display") { controller.addDisplay(player, DisplayKind.TEXT, texts.raw("display.default-text") ?: "文字") }
+            SLOT_ADD_TEXT -> guarded(player, "aase.create.display") { controller.addDisplay(player, DisplayKind.TEXT, texts.label("display.default-text")) }
 
             SLOT_MODE_MOVE -> setMode(player, EditMode.MOVE)
             SLOT_MODE_POSE -> setMode(player, EditMode.POSE)

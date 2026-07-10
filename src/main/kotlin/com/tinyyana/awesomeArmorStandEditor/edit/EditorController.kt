@@ -349,7 +349,7 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
 
     fun exportMcFunction(player: Player) = withSession(player) { s ->
         if (s.scene.elements.isEmpty()) return@withSession plugin.texts.send(player, "export.empty")
-        val files = McFunctionExporter.export(s.scene)
+        val files = McFunctionExporter.export(s.scene, datapackReadme(s.scene.animation != null))
         val base = File(plugin.dataFolder, "exports/${sanitize(s.scene.name)}/datapack")
         for ((rel, content) in files) {
             val f = File(base, rel)
@@ -358,6 +358,14 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
         }
         plugin.texts.send(player, "export.mcfunction-saved", "path" to base.path)
         LycoLibHook.audit(plugin.name, player.name, "scene.export-mcfunction", "name=${s.scene.name}")
+    }
+
+    private fun datapackReadme(animated: Boolean): String = buildString {
+        fun line(key: String) = appendLine(plugin.texts.label(key).replace("{ns}", McFunctionExporter.NS))
+        line("export-readme.head")
+        if (animated) line("export-readme.anim")
+        appendLine()
+        line("export-readme.foot")
     }
 
     private fun sanitize(name: String) = name.replace(Regex("[^A-Za-z0-9_\\-]"), "_").ifBlank { "scene" }
@@ -419,17 +427,17 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
                 player, "info.anim",
                 "len" to a.lengthTicks.toString(),
                 "tracks" to a.tracks.size.toString(),
-                "loop" to if (a.loop) "開" else "關",
+                "loop" to plugin.texts.label(if (a.loop) "label.on" else "label.off"),
             )
         }
         s.selected()?.let { sel ->
             plugin.texts.send(
                 player, "info.selected",
                 "id" to sel.localId.toString(),
-                "type" to if (sel is ArmorStandElement) "盔甲座" else "Display",
+                "type" to typeLabel(sel),
             )
         }
-        plugin.texts.send(player, "info.dirty", "state" to if (s.dirty) "有未儲存變更" else "已儲存")
+        plugin.texts.send(player, "info.dirty", "state" to plugin.texts.label(if (s.dirty) "label.unsaved" else "label.saved"))
     }
 
     // --- equipment menu accessors ---
@@ -541,7 +549,7 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
         preset.arms?.let { el.flags.arms = it }
         s.entities[el.localId]?.let { plugin.placement.apply(it, el) }
         s.dirty = true
-        plugin.texts.send(player, "preset.pose-applied", "name" to preset.name)
+        plugin.texts.send(player, "preset.pose-applied", "name" to plugin.texts.presetName(preset.id, preset.name))
     }
 
     fun applyFx(player: Player, presetId: String) = withSession(player) { s ->
@@ -565,7 +573,7 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
             plugin.particles.spawnEmitter(origin, s.scene.id, player.uniqueId, emitter)
         }
         s.dirty = true
-        plugin.texts.send(player, "preset.fx-applied", "name" to preset.name)
+        plugin.texts.send(player, "preset.fx-applied", "name" to plugin.texts.presetName(preset.id, preset.name))
     }
 
     /** Make the pose symmetric by mirroring the left arm/leg onto the right (or vice versa). */
@@ -612,29 +620,32 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
     fun readout(player: Player, session: EditSession) {
         val element = session.selected()
         if (element == null) {
-            plugin.texts.actionbarRaw(player, "<gray>未選取元件 · 右鍵點擊元件以選取")
+            plugin.texts.actionbarRaw(player, plugin.texts.label("readout.none"))
             return
         }
-        val type = if (element is ArmorStandElement) "盔甲座" else "Display"
         val stepStr = formatStep(session)
         val detail = valueReadout(session, element)
         plugin.texts.actionbarRaw(
             player,
-            "<gray>$type<white>#${element.localId} <dark_gray>| <aqua>${modeLabel(session.mode)}" +
+            "<gray>${typeLabel(element)}<white>#${element.localId} <dark_gray>| <aqua>${modeLabel(session.mode)}" +
                 partLabel(session, element) +
-                " <dark_gray>| 軸 <yellow>${session.axis.name}" +
-                " <dark_gray>| 步進 <green>$stepStr" +
+                " <dark_gray>| ${plugin.texts.label("label.axis")} <yellow>${session.axis.name}" +
+                " <dark_gray>| ${plugin.texts.label("label.step")} <green>$stepStr" +
                 (if (detail.isNotEmpty()) " <dark_gray>| <gray>$detail" else ""),
         )
     }
 
-    private fun modeLabel(mode: EditMode) = when (mode) {
-        EditMode.MOVE -> "移動"; EditMode.POSE -> "姿勢"; EditMode.TRANSLATE -> "平移"
-        EditMode.ROTATE -> "旋轉"; EditMode.SCALE -> "縮放"
-    }
+    private fun typeLabel(element: Element): String =
+        plugin.texts.label(if (element is ArmorStandElement) "label.armorstand" else "label.display")
+
+    private fun modeLabel(mode: EditMode) = plugin.texts.label("mode.${mode.name.lowercase()}")
 
     private fun partLabel(session: EditSession, element: Element): String =
-        if (element is ArmorStandElement && session.mode == EditMode.POSE) " <white>${session.part.display}" else ""
+        if (element is ArmorStandElement && session.mode == EditMode.POSE) {
+            " <white>${plugin.texts.label("part.${session.part.name.lowercase()}")}"
+        } else {
+            ""
+        }
 
     private fun valueReadout(session: EditSession, element: Element): String = when {
         element is ArmorStandElement && session.mode == EditMode.POSE -> {

@@ -31,6 +31,7 @@ Pose armor stands and item/block/text displays with a hybrid GUI + in-world tool
 - **Survival-safe**: element ownership tags (anti-griefing), per-player / per-chunk / global element caps, region-protection awareness; **anything that writes to server files (export, saving to the shared preset library) is admin/builder-only by default** (see [Permissions](#permissions)).
 - **Moderation tools**: someone dumped a build somewhere stupid? `/aase admin whois` says who placed it, `/aase admin remove` clears it, and `/aase admin purge <radius> [player]` previews a bulk cleanup that only runs after an explicit `confirm`. It **only ever touches elements this plugin placed** (hand-placed vanilla armor stands are never removed) and **never deletes the owner's saved scene**.
 - **Zero hard dependencies, cross-platform**: runs on both Spigot and Paper; no other plugin required.
+- **Bilingual**: English and Traditional Chinese, picked from the server's locale by default (`language: auto`), or pinned with `language: zh_TW` / `en`. Every player-facing string — including the in-game guide book — lives in `lang/<code>.yml` and reloads without a restart.
 
 ### Compatibility
 
@@ -41,6 +42,8 @@ Pose armor stands and item/block/text displays with a hybrid GUI + in-world tool
 ### Installation
 
 Drop `AwesomeArmorStandEditor-<version>.jar` into your server's `plugins/` folder and restart. No other dependencies.
+
+Upgrading from 0.x: player-facing text moved out of `messages.yml` / `guide.yml` into `lang/<code>.yml`. The old files are left alone but no longer read — the server logs a reminder if it finds them.
 
 ### Core concepts
 
@@ -145,6 +148,7 @@ Share code format: `ShareCode.encode(scene)` = `AASE1:` + URL-safe Base64(gzip(J
 - **生存服安全**:元件擁有權標記(反格里芬)、每人/每區塊/全域數量上限、尊重領地保護;**寫入伺服器檔案的功能(匯出、存進共用範本庫)預設只開放給管理員/建築師**(見權限)。
 - **管理員工具**:有人把作品放在奇怪的地方?`/aase admin whois` 查是誰放的、`/aase admin remove` 移除、`/aase admin purge <半徑> [玩家]` 先預覽再 `confirm` 才批次清除。**只碰本插件放置的元件**(玩家手放的原版盔甲座不動),而且**不刪玩家的存檔**。
 - **零硬依賴、跨平台**:在 Spigot 與 Paper 都能跑;不需要安裝任何其他插件。
+- **中英雙語**:預設看伺服器地區自動選(`language: auto`),也可以直接指定 `zh_TW` / `en`。所有玩家可見文字——連同遊戲內手冊——都在 `lang/<代碼>.yml`,改完 `/aase reload` 就生效。
 
 ### 相容性
 
@@ -155,6 +159,8 @@ Share code format: `ShareCode.encode(scene)` = `AASE1:` + URL-safe Base64(gzip(J
 ### 安裝
 
 把 `AwesomeArmorStandEditor-<版本>.jar` 放進伺服器的 `plugins/`,重啟即可。無其他相依。
+
+從 0.x 升級:玩家可見文字從 `messages.yml` / `guide.yml` 搬到 `lang/<代碼>.yml`。舊檔不會被動,但也不再被讀取——啟動時如果還在,log 會提醒你。
 
 ### 先懂三個概念
 

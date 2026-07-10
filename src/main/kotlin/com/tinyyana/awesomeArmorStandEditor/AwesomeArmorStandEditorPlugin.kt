@@ -62,7 +62,7 @@ class AwesomeArmorStandEditorPlugin : JavaPlugin() {
         panel = ControlPanel(this)
         gallery = PresetGallery(this)
         equipmentMenu = EquipmentMenu(this)
-        guideBook = GuideBook(this).also { it.reload() }
+        guideBook = GuideBook(this)
         particles = ParticleService(this, keys)
         animation = AnimationPlayer(this)
         adminTools = AdminTools(this)
@@ -101,7 +101,6 @@ class AwesomeArmorStandEditorPlugin : JavaPlugin() {
         guard = buildGuard()
         texts.reload(this)
         presets.reload(this)
-        guideBook.reload()
     }
 
     private fun buildGuard(): RegionGuard = if (settings.regionEventProbe) EventProbeGuard() else PermissiveGuard

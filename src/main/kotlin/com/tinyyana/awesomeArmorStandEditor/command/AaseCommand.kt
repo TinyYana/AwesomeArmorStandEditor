@@ -146,7 +146,7 @@ class AaseCommand(private val plugin: AwesomeArmorStandEditorPlugin) : TabExecut
                 ItemCodec.encode(if (off.type.isAir) ItemStack(Material.STONE) else off)
             }
             DisplayKind.BLOCK -> "minecraft:stone"
-            DisplayKind.TEXT -> texts.raw("display.default-text") ?: "文字"
+            DisplayKind.TEXT -> texts.label("display.default-text")
         }
         controller.addDisplay(player, kind, payload)
     }

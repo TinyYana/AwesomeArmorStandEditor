@@ -1,5 +1,9 @@
 # AwesomeArmorStandEditor — 設定
-# 玩家可見文字在 messages.yml。此檔只放行為/效能常數,可用 /aase reload 重載。
+# 玩家可見文字在 lang/<語言代碼>.yml。此檔只放行為/效能常數,可用 /aase reload 重載。
+
+# 語言(全服一種)。auto = 看伺服器 JVM 的地區設定:中文語系→zh_TW,其餘→en。
+# 也可以直接寫 zh_TW 或 en。啟用後對應的 lang/<代碼>.yml 會複製到本資料夾,可自行編輯。
+language: auto
 
 tool:
   # 編輯工具的物品材質(Bukkit Material 名稱)

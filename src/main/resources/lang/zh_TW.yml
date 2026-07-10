@@ -1,5 +1,6 @@
-# AwesomeArmorStandEditor — 玩家可見文字(MiniMessage)
-# 繁體中文;可自由改成其他語言。指令名用 <aqua>,點擊提示用 <yellow>。
+# AwesomeArmorStandEditor — 繁體中文(MiniMessage)
+# 這一份是所有玩家可見文字。要換語言:config.yml 的 language(auto / zh_TW / en)。
+# 想自訂:直接改這個檔,/aase reload 生效。指令名用 <aqua>,點擊提示用 <yellow>。
 
 prefix: "<gold>✎</gold> "
 
@@ -160,6 +161,22 @@ preset:
   fx-applied: "<green>已加上特效 <white>{name}"
   mirrored: "<green>已把左邊的手腳鏡射到右邊(對稱)"
   pose-saved: "<green>已把目前姿勢存成範本 <white>{id}</white>,以後 <aqua>/aase pose {id}</aqua> 就能叫出來"
+  # 內建範本的顯示名。key = presets.yml 的 id;沒有對應 key 的(例如 /aase pose save 存的)
+  # 就直接用 presets.yml 裡的 name。
+  name:
+    stand: "立正"
+    tpose: "T 字"
+    cheer: "萬歲"
+    wave: "揮手"
+    point: "指向前方"
+    think: "沉思"
+    sit: "坐姿(懸空)"
+    run: "跑步"
+    flame_aura: "火焰光環"
+    hearts: "愛心"
+    cherry: "櫻花飄落"
+    sparkle: "星塵"
+    soul: "靈魂之焰"
 
 gallery:
   title: "範本庫 · 點一下就套用"
@@ -185,9 +202,6 @@ list:
   empty: "<yellow>你還沒有任何存檔,用 <aqua>/aase new <名稱></aqua> 開始"
   header: "<gold>你的場景(共 {count} 個)"
   entry: "<gray>· <white>{name} <dark_gray>({count} 元件)"
-
-guide:
-  book-title: "盔甲座編輯器 手冊"
 
 help:
   header: "<gold>AwesomeArmorStandEditor 指令"
@@ -248,3 +262,178 @@ panel:
   export: "<aqua>匯出 summon 指令"
   delete: "<red>刪除選取元件"
   close: "<gray>關閉"
+
+# 手持工具時螢幕下方的即時讀數
+readout:
+  none: "<gray>未選取元件 · 右鍵點擊元件以選取"
+
+label:
+  armorstand: "盔甲座"
+  display: "Display"
+  axis: "軸"
+  step: "步進"
+  on: "開"
+  off: "關"
+  unsaved: "有未儲存變更"
+  saved: "已儲存"
+
+mode:
+  move: "移動"
+  pose: "姿勢"
+  translate: "平移"
+  rotate: "旋轉"
+  scale: "縮放"
+
+part:
+  head: "頭"
+  body: "身"
+  left_arm: "左臂"
+  right_arm: "右臂"
+  left_leg: "左腿"
+  right_leg: "右腿"
+
+# /aase export function 產出的資料包裡的 README.txt
+export-readme:
+  head: |-
+    AwesomeArmorStandEditor 匯出的資料包(最佳努力)
+
+    放進世界的 datapacks/<名稱>/,或 .minecraft 的 datapack 目錄。
+    - function {ns}:summon  在你站的位置召喚整個場景
+  anim: |-
+    - function {ns}:load    初始化計時器(播動畫前先跑一次)
+    - function {ns}:tick    啟動關鍵影格播放(每 tick 自我排程)
+  foot: |-
+    注意:pack_format 與 function 資料夾名稱依 MC 版本可能要調整;NBT 為最佳努力。
+
+# 遊戲內手冊(/aase guide 給一本可翻頁的書)。每一項 = 一頁,用 MiniMessage。
+# 書是紙底色,請用深色(<black>/<dark_*>),白色會看不到。書頁窄(約一行 19 字、13 行),請保持簡短。
+guide:
+  book-title: "盔甲座編輯器 手冊"
+  pages:
+    - |-
+      <dark_gray>◆ 盔甲座編輯器 ◆
+
+      <black>完全不會擺?
+      三步就好:
+
+      <dark_green>1<black> /aase new 名字
+      <dark_green>2<black> /aase addstand
+      <dark_green>3<black> /aase presets
+
+      <black>選盔甲座 → 點範本
+      <gray>往後翻看更多 →
+    - |-
+      <dark_gray>① 開始一個作品
+
+      <dark_blue>/aase new <名字>
+      <black>開新作品
+
+      <dark_blue>/aase tool
+      <black>拿編輯工具
+
+      <black>拿工具<dark_red>右鍵<black>點
+      盔甲座 = 選取它
+      <gray>(先選才能改)
+    - |-
+      <dark_gray>② 範本庫(最推薦)
+
+      <dark_blue>/aase presets
+      <black>打開圖形選單
+
+      <dark_green>上排姿勢<black>=點就套用
+      <dark_green>下排特效<black>=點就加
+      <dark_aqua>鏡像<black>=左右對稱
+
+      <black>擺好想留著:
+      <dark_blue>/aase pose save id
+    - |-
+      <dark_gray>③ 自己微調(工具)
+
+      <black>拿著工具:
+      <dark_red>左鍵<black> 減 · <dark_green>右鍵<black> 加
+      <black>滾輪 換步進
+      潛行+滾輪 換軸
+      潛行+左鍵 換模式
+      潛行+右鍵 換部位
+
+      <gray>看畫面下方讀數
+    - |-
+      <dark_gray>④ 控制面板
+
+      <dark_blue>/aase
+      <black>打開面板,點:
+      · 模式 / 部位 / 軸
+      · 微調 +/−
+      · 旗標(隱形…)
+      · 裝備 · 範本庫
+      · 存檔 / 匯出 / 刪除
+    - |-
+      <dark_gray>⑤ 裝備與外觀
+
+      <dark_blue>/aase equip
+      <black>開裝備選單:
+      先在背包點起
+      物品(到游標)
+      再點裝備格子
+      =裝上;空手點
+      =卸下(不消耗)
+
+      <black>開關(隱形等):
+      <dark_blue>/aase flag small
+    - |-
+      <dark_gray>⑥ 粒子特效
+
+      <dark_blue>/aase particle
+        add FLAME
+      <black>加一個發射器
+
+      <dark_blue>/aase particle clear
+      <black>清除全部
+
+      <gray>用範本庫下排
+      加特效更快
+    - |-
+      <dark_gray>⑦ 動畫(進階)
+
+      <black>擺姿勢 → 記影格:
+      <dark_blue>/aase anim key 0
+      <black>換姿勢 →
+      <dark_blue>/aase anim key 20
+      <dark_blue>/aase anim length 20
+      <dark_blue>/aase anim play
+
+      <black>stop 停 · loop 循環
+    - |-
+      <dark_gray>⑧ 存檔與分享
+
+      <dark_blue>/aase save<black> 存檔
+      <dark_blue>/aase load 名字<black> 放置
+      <dark_blue>/aase list<black> 我的清單
+      <dark_blue>/aase info<black> 場景資訊
+
+      <black>分享給別人:
+      <dark_blue>/aase share<black> 產生碼
+      <dark_blue>/aase import 碼<black> 匯入
+    - |-
+      <dark_gray>⑨ 匯出(建築師)
+
+      <black>下面兩個會寫檔
+      到伺服器,預設
+      只開放給管理員
+      /建築師:
+
+      <dark_blue>/aase export command
+      <dark_blue>/aase export function
+      <dark_blue>/aase pose save id
+    - |-
+      <dark_gray>⑩ 小提醒
+
+      <black>· 只能改自己的
+      · 會尊重領地保護
+      · 作品會留在世界
+      · <dark_blue>/aase close<black> 結束
+
+      <gray>完整手冊在
+      docs/MANUAL.md
+
+      <black>玩得開心!

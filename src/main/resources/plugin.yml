@@ -18,50 +18,52 @@ softdepend: [ LycoLib, GriefPrevention, WorldGuard ]
 libraries:
   - org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.4.20-Beta1
 
+# Note: plugin.yml descriptions are read before the plugin loads, so they can't be translated.
+# Every player-facing string lives in lang/<code>.yml — see `language` in config.yml.
 commands:
   aase:
-    description: 盔甲座 / Display 場景編輯器
+    description: Armor stand / display scene editor
     usage: /aase
     aliases: [ armorstand, ase ]
 
 permissions:
   aase.use:
-    description: 開啟編輯器與使用編輯工具
+    description: Open the editor and use the edit tool
     default: true
   aase.create.armorstand:
-    description: 放置盔甲座元件
+    description: Place armor stand elements
     default: true
   aase.create.display:
-    description: 放置 Display 元件
+    description: Place display elements
     default: true
   aase.scene.save:
-    description: 儲存場景(存到自己的存檔資料夾)
+    description: Save scenes (to your own save folder)
     default: true
   aase.scene.share:
-    description: 產生 / 匯入分享碼(不落地伺服器檔案)
+    description: Generate / import share codes (nothing is written to the server)
     default: true
   aase.export.command:
-    # 會把 summon 指令 / mcfunction 資料包寫進伺服器的 plugins 資料夾,預設只給管理員/建築師
-    description: 匯出 summon 指令 / mcfunction 資料包(寫入伺服器檔案)
+    # Writes summon commands / mcfunction datapacks into the server's plugins folder — admins/builders only
+    description: Export summon commands / mcfunction datapacks (writes server files)
     default: op
   aase.preset.save:
-    # /aase pose save 會改寫全服共用的 presets.yml,預設只給管理員/建築師
-    description: 把姿勢存進全服共用的範本庫(presets.yml)
+    # /aase pose save rewrites the server-wide presets.yml — admins/builders only
+    description: Save a pose into the server-wide preset library (presets.yml)
     default: op
   aase.animate:
-    description: 使用關鍵影格動畫(P3)
+    description: Use keyframe animation
     default: true
   aase.clear:
-    # /aase clear <半徑> — 只清「別人的」元件,且只在該玩家有建築權的方塊上;不需要 aase.admin
-    description: 清除別人放在你有建築權之處的元件(領地內只有領主與受信任者清得掉)
+    # /aase clear <radius> — only other people's elements, only on blocks that player may build on; no aase.admin needed
+    description: Clear other people's elements where you may build (inside a claim, only the owner and trusted players can)
     default: true
   aase.admin:
-    # /aase admin whois|remove|purge — 只作用於本插件放置的元件,不碰玩家手放的原版盔甲座
-    description: 管理:編輯他人作品、查擁有者、強制移除他人元件、reload
+    # /aase admin whois|remove|purge — only touches elements this plugin placed, never hand-placed vanilla stands
+    description: 'Admin: edit any build, look up owners, force-remove elements, reload'
     default: op
   aase.bypass.region:
-    description: 略過領地檢查
+    description: Bypass region protection checks
     default: op
   aase.bypass.limit:
-    description: 略過數量上限
+    description: Bypass element caps
     default: op

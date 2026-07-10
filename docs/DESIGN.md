@@ -4,7 +4,7 @@
 
 ## 0. 定位與硬規則
 
-- **可開源、上架 SpigotMC**:程式碼與命名對外界友善,預設文字外部化到 `messages.yml`(預設繁中,可被覆寫/翻譯)。
+- **可開源、上架 SpigotMC**:程式碼與命名對外界友善,所有玩家可見文字外部化到 `lang/<代碼>.yml`(附繁中與英文,依伺服器地區自動選,可被覆寫/翻譯)。
 - **完全獨立、跨平台(Spigot + Paper)**:不硬依賴任何插件(含 LycoLib)。外部使用者一載即可用,丟 Spigot 不 crash、正常運作。
   - **只用 Bukkit/Spigot API 面**,不碰 Paper-only 方法(否則 Spigot 端 `NoSuchMethodError`)。踩雷點:用 `World.rayTraceEntities` 不用 Paper `getTargetEntity`;`TextDisplay.setText(String)` 不用 `text(Component)`;文字一律走自帶 audience 不用 Paper 原生 `sendMessage(Component)`;物品序列化用 `BukkitObjectStream` 不用 Paper `serializeAsBytes`。
   - **文字用打包(shade+relocate)的 Adventure + MiniMessage**,經 `BukkitAudiences` 送:Spigot/Paper 一致的現代文字 + 匯出指令一鍵點擊複製。relocate 到 `com.tinyyana.awesomeArmorStandEditor.libs.kyori.*`。

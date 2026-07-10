@@ -15,16 +15,34 @@ Spigot 相容性:編譯只用 Bukkit/Spigot API 面,Adventure 以 shade+relocate
 
 - `./gradlew build` 通過:編譯 + shadowJar + 單元測試。
 - 單元測試 `EditorLogicTest`:場景 JSON round-trip、姿勢角度 wrap、四元數/縮放/平移運算、**分享碼 round-trip + 惡意/損毀輸入回 null 不丟例外**。
+- 單元測試 `LangFilesTest`(1.0.0 新增):`lang/zh_TW.yml` 與 `lang/en.yml` 的 key 集合一致、`{placeholder}` 一一對應、每條字串與每頁手冊都能被 MiniMessage 解析。**已做變異驗證**:從 `en.yml` 刪掉一個 key、或拿掉 `scene.saved` 的 `{count}`,兩條測試都會紅。
 - 打包 jar 內 Adventure 已 relocate 到 `com/tinyyana/awesomeArmorStandEditor/libs/kyori`,原 `net/kyori` 無殘留。
 
-## L3 已驗證(本輪,2026-07-08)
+## L3 已驗證(本輪,2026-07-10 — 語言切換)
 
-- Paper 26.2 `runServer` enable 成功:`AwesomeArmorStandEditor enabled` + `Done (25s)`,**零 Exception**;編輯過的 `plugin.yml`(新權限 `aase.preset.save`、`aase.export.command`/`preset.save` 改 `default: op`)正常解析。測試服已關、port 25565 已釋放。
+Paper 26.2 `runServer`,四次啟動,每次都 `AwesomeArmorStandEditor v1.0.0 enabled` + `Done (~20s)`、**插件零 Exception**;測試服已關、port 25565 已釋放。
+
+- `language` 未設(從 0.2.2 升上來的舊 `config.yml`)→ log `Language: zh_TW`(本機 JVM `user.language=zh`),`lang/zh_TW.yml` 產生。
+- `language: en` → log `Language: en`,`lang/en.yml` 產生;`zh_TW.yml` 已存在也**不再**印 Bukkit 的 `Could not save ... already exists` 警告。
+- `language: klingon`(不認得的值)→ log 警告 `Unknown language 'klingon' ... using auto` 並退回 `zh_TW`。
+- 舊的 `messages.yml` / `guide.yml` 還在資料夾裡 → 兩行 log 提醒「不再讀取」,**檔案沒有被刪也沒有被覆寫**。
+
+⚠ **這輪測不到主控台指令。** 本機這顆 Paper 26.2(`26.2-56-8cd4f47`)對**任何**主控台指令都丟 `NullPointerException: ... CommandSourceStack.getLevel() is null`——連原版 `/stop` 都一樣,與本插件無關。所以 `/aase reload` 換語言、以及所有玩家可見字串的實際渲染都**沒有在執行期驗證過**,列在下面的 L4 手動步驟。
+
 - 玩家端行為(裝備選單、分享/匯入、資訊、匯出/範本存檔的權限擋人)為 L4,需真人;步驟見下。
 
 ## L2–L4 手動測試
 
 前置:`./gradlew runServer` 起服,或把 jar 丟進既有 Paper/Spigot 服。
+
+### 語言(1.0.0 新增,管理員視角)
+
+1. **auto**:`config.yml` 保持 `language: auto` 起服 → log 印 `Language: <代碼>`,`plugins/AwesomeArmorStandEditor/lang/` 只有那一份語言檔。中文系統應得 `zh_TW`,英文系統應得 `en`。
+2. **明確指定 + 熱切換**:把 `language` 改成 `en` → `/aase reload` → 應回英文 `Config reloaded`,`lang/en.yml` 出現。接著 `/aase`(控制面板)、`/aase presets`(範本庫)、`/aase guide`(手冊)、拿工具看螢幕下方讀數 —— **整條路徑都要是英文,不能中英混雜**。特別檢查範本庫的格子名(應是 `T-Pose`、`Cherry Blossom`,不是「T 字」「櫻花飄落」)。改回 `zh_TW` → `/aase reload` → 同樣幾個畫面都要變回繁中。
+3. **壞值**:`language: nonsense` → `/aase reload` → log 警告 `Unknown language 'nonsense' ... using auto`,並照 auto 的結果跑,**不能整個插件掛掉**。
+4. **自訂翻譯**:改 `lang/en.yml` 的 `panel.title` → `/aase reload` → `/aase` 的視窗標題跟著變(證明讀的是資料夾裡的檔,不是 jar 內的)。把某個 key **整行刪掉** → reload → 那句話應退回 jar 內的英文,**不是**紅字 `<red>panel.title`。
+5. **自己存的範本不受影響**:`/aase pose save mypose 我的姿勢` → `/aase presets` → 在任一語言下都應顯示「我的姿勢」(語言檔沒有 `preset.name.mypose`,退回 `presets.yml` 的 `name`)。
+6. **從 0.x 升級**:資料夾裡留著舊的 `messages.yml` / `guide.yml` 起服 → log 出現兩行「不再讀取」提醒,而且**兩個檔案原封不動**(不會被刪、不會被覆寫)。
 
 ### 管理員視角
 

@@ -52,12 +52,14 @@ Drop `AwesomeArmorStandEditor-<version>.jar` into the server's `plugins/` folder
 ```
 plugins/AwesomeArmorStandEditor/
   config.yml      behavior / performance settings
-  messages.yml    every player-facing string (translatable)
+  lang/en.yml     every player-facing string (including the guide book pages)
+  lang/zh_TW.yml  the same file in Traditional Chinese
   presets.yml     pose and effect presets (freely editable)
-  guide.yml       in-game guide book pages
   scenes/         your saves (one folder per player)
   exports/        exported commands / datapacks
 ```
+
+**Language** is server-wide, set by `language` in `config.yml`: `auto` (default — reads the server JVM's locale, so a Chinese locale gets `zh_TW` and everything else gets `en`), `zh_TW`, or `en`. Both language files are written out (so you can compare them, or edit one before switching to it); only the selected one is read. Edit it in place to customize.
 
 After editing config, run `/aase reload` (no restart needed).
 
@@ -336,12 +338,13 @@ Deliberate boundaries — do not mistake this for a general entity remover:
 
 ## 17. Configuration files
 
-- **config.yml**: tool material, step sizes, per-player/per-chunk/global element caps, region-event-probe toggle, particle budget and range.
-- **presets.yml**: pose and effect presets (angles in degrees, freely editable; `/aase pose save` writes here).
-- **messages.yml**: every player-facing string (MiniMessage, translatable; command names use `<aqua>`, click hints use `<yellow>`).
-- **guide.yml**: each page of the in-game paginated guide book (the book has a parchment background — use dark colors).
+- **config.yml**: `language` (`auto` / `zh_TW` / `en`), tool material, step sizes, per-player/per-chunk/global element caps, region-event-probe toggle, particle budget and range.
+- **presets.yml**: pose and effect presets (angles in degrees, freely editable; `/aase pose save` writes here). A preset's **display name** comes from `preset.name.<id>` in the lang file; presets you save yourself have no such key and show the `name` from presets.yml.
+- **lang/zh_TW.yml, lang/en.yml**: every player-facing string (MiniMessage; command names use `<aqua>`, click hints use `<yellow>`), plus `guide.pages` — the in-game paginated book (parchment background, so use dark colors). To add a language, copy a file, rename it, and point `language` at it.
 
 All of the above take effect with `/aase reload`, no restart needed.
+
+> Upgrading from 0.x: the old `messages.yml` / `guide.yml` are no longer read (the server logs a reminder on boot). Move any edits into `lang/<code>.yml`, then delete them.
 
 ## 18. Troubleshooting FAQ
 
