@@ -96,6 +96,7 @@ equip:
   only-stand: "<red>只有盔甲座能穿裝備"
   bad-slot: "<red>未知的裝備欄位"
   set: "<green>已更新 <white>{slot}</white> 裝備(以副手物品為準)"
+  cleared: "<yellow>已清空 <white>{slot}</white> 欄位——你的副手是空的;要裝上就把物品拿在副手再執行一次"
   hint: "<yellow>把物品拿在副手,執行 <aqua>/aase setequip <head|chest|legs|feet|mainhand|offhand>"
 
 equip-menu:

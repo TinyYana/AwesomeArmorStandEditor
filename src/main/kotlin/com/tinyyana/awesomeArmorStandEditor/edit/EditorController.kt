@@ -217,6 +217,9 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
         plugin.sessions.get(player.uniqueId)?.let { plugin.sessions.close(player.uniqueId) }
         val session = plugin.sessions.open(player.uniqueId, scene)
         plugin.placement.placeAll(session, origin, player.uniqueId)
+        // Fresh sessions start unselected; pick the first element so setequip/flag/pose
+        // work right after load without hunting for the edit tool first.
+        session.selectedLocalId = scene.elements.firstOrNull()?.localId
         for (emitter in scene.emitters) plugin.particles.spawnEmitter(origin, scene.id, player.uniqueId, emitter)
         plugin.texts.send(player, "scene.loaded", "name" to name, "count" to scene.elements.size.toString())
     }
@@ -296,18 +299,25 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
         if (el !is ArmorStandElement) return@withSession plugin.texts.send(player, "equip.only-stand")
         val off = player.inventory.itemInOffHand
         val encoded = if (off.type.isAir) null else ItemCodec.encode(off)
-        when (slot.lowercase()) {
-            "head", "helmet" -> el.equipment.head = encoded
-            "chest", "chestplate" -> el.equipment.chest = encoded
-            "legs", "leggings" -> el.equipment.legs = encoded
-            "feet", "boots" -> el.equipment.feet = encoded
-            "mainhand", "hand" -> el.equipment.mainHand = encoded
-            "offhand" -> el.equipment.offHand = encoded
+        val eq = el.equipment
+        // Empty off-hand still clears the slot (documented in MANUAL), but the reply must say
+        // "cleared", not "set" — otherwise an empty off-hand reads as a silent success.
+        val old = when (slot.lowercase()) {
+            "head", "helmet" -> eq.head.also { eq.head = encoded }
+            "chest", "chestplate" -> eq.chest.also { eq.chest = encoded }
+            "legs", "leggings" -> eq.legs.also { eq.legs = encoded }
+            "feet", "boots" -> eq.feet.also { eq.feet = encoded }
+            "mainhand", "hand" -> eq.mainHand.also { eq.mainHand = encoded }
+            "offhand" -> eq.offHand.also { eq.offHand = encoded }
             else -> return@withSession plugin.texts.send(player, "equip.bad-slot")
         }
         s.entities[el.localId]?.let { plugin.placement.apply(it, el) }
         s.dirty = true
-        plugin.texts.send(player, "equip.set", "slot" to slot)
+        when {
+            encoded != null -> plugin.texts.send(player, "equip.set", "slot" to slot)
+            old != null -> plugin.texts.send(player, "equip.cleared", "slot" to slot)
+            else -> plugin.texts.send(player, "equip.hint")
+        }
     }
 
     fun toggleFlag(player: Player, flag: String) = withSession(player) { s ->
@@ -403,6 +413,7 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
         plugin.sessions.get(player.uniqueId)?.let { plugin.sessions.close(player.uniqueId) }
         val session = plugin.sessions.open(player.uniqueId, scene)
         plugin.placement.placeAll(session, origin, player.uniqueId)
+        session.selectedLocalId = scene.elements.firstOrNull()?.localId
         for (emitter in scene.emitters) plugin.particles.spawnEmitter(origin, scene.id, player.uniqueId, emitter)
         session.dirty = true
         LycoLibHook.audit(plugin.name, player.name, "scene.import", "name=${scene.name} elements=${scene.elements.size}")

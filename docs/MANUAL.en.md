@@ -239,7 +239,7 @@ Multiple elements with their own `key` calls animate together. For finer control
 
 - `/aase save` — saves to `scenes/<your-uuid>/<scene-id>.json`.
 - `/aase list` — your list of scenes.
-- `/aase load <name>` — places **a new copy** at your feet (you can place several).
+- `/aase load <name>` — places **a new copy** at your feet (you can place several). The first element is **auto-selected**, so `setequip`/`flag`/presets work right away.
 - `/aase edit` — stand next to an existing build to **re-bind** it as your session and keep editing (no duplicate is created).
 - `/aase close` — ends the editing session (the build stays in the world).
 - `/aase info` — current scene info (element count, armor stands/displays, emitters, animation, selection, save state).

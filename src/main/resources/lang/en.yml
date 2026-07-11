@@ -96,6 +96,7 @@ equip:
   only-stand: "<red>Only armor stands can wear equipment"
   bad-slot: "<red>Unknown equipment slot"
   set: "<green>Updated the <white>{slot}</white> slot (from your off-hand item)"
+  cleared: "<yellow>Cleared the <white>{slot}</white> slot — your off-hand was empty; hold an item there and run it again to equip"
   hint: "<yellow>Hold an item in your off-hand, then run <aqua>/aase setequip <head|chest|legs|feet|mainhand|offhand>"
 
 equip-menu:
