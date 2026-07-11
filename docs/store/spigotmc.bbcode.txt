@@ -1,0 +1,73 @@
+[CENTER][SIZE=6][B]AwesomeArmorStandEditor[/B][/SIZE]
+[SIZE=4]A friendly armor stand / display-entity scene editor for survival & creative servers[/SIZE][/CENTER]
+
+[CENTER]No angle math. No trial-and-error commands. Pick a pose from a menu, click, done.[/CENTER]
+
+[HR][/HR]
+
+[SIZE=5][B]✦ What it does[/B][/SIZE]
+
+Pose armor stands and item/block/text display entities with a hybrid GUI + in-world tool. Save your work as a portable scene, share it with a copy-paste code, animate it with keyframes, or export it as a summon command / mcfunction datapack for your own map or server.
+
+[SIZE=5][B]✦ Features[/B][/SIZE]
+[LIST]
+[*][B]Preset library (zero-skill-required)[/B] — can't pose anything? Open the graphical preset menu, click "wave / cheer / sit…" to apply instantly. One-click Mirror for left-right symmetry. One-click particle effect presets. Save your own pose back into the library for reuse.
+[*][B]Unified editing[/B] for armor stands and display entities (item / block / text) — pose, transform, scale, rotation, equipment, flags, all through the same workflow.
+[*][B]Hybrid interaction[/B] — a GUI control panel [I]and[/I] a handheld tool for direct in-world nudging, with a live actionbar readout.
+[*][B]Particle effects[/B] — budgeted, only fire near a player in a loaded chunk, never scans the world.
+[*][B]Keyframe animation[/B] — a timeline with keyframes and live preview playback. Displays use client-side interpolation (near-zero server cost); armor stands animate tick-by-tick during editing.
+[*][B]Save / share / export[/B] — every scene is a portable JSON blueprint you can place multiple times. Generate a share code (safe to paste in chat) so another player can import your build with one command. Export a one-click-copy [I]/summon[/I] command, or a full mcfunction datapack (animation-driven) for a build that runs without your plugin.
+[*][B]Equipment menu[/B] — click an item onto a slot to equip it, click with an empty cursor to unequip. Your items are never consumed or duplicated.
+[*][B]Survival-safe[/B] — element ownership tags (nobody can break or steal your build), per-player / per-chunk / global element caps, and automatic region-protection awareness (GriefPrevention / WorldGuard / Towny / Lands…). Anything that writes to server files (export, saving to the shared preset library) is admin/builder-only by default.
+[*][B]Zero hard dependencies[/B] — runs on Spigot [I]or[/I] Paper, no other plugin required.
+[/LIST]
+
+[SIZE=5][B]⚙ Compatibility[/B][/SIZE]
+[LIST]
+[*]Minecraft / Paper / Spigot [B]1.26.2[/B], Java 25
+[*]Only the Bukkit/Spigot API surface is used — runs identically on plain Spigot, not just Paper
+[*]Region-protection plugins are respected automatically via an event probe, no hard dependency needed
+[/LIST]
+
+[SIZE=5][B]▶ Quick start[/B][/SIZE]
+[CODE]/aase new MyBuild        start a new scene
+/aase addstand            spawn an armor stand
+(right-click it)          select it
+/aase presets             open the preset library — click a pose, click an effect
+/aase save                done[/CODE]
+
+You never see a single angle number.
+
+[SIZE=5][B]⌨ Commands[/B][/SIZE]
+[LIST]
+[*][CODE]/aase[/CODE] — open the control panel
+[*][CODE]/aase tool[/CODE] — get the editing tool
+[*][CODE]/aase presets[/CODE] — preset library GUI (poses / effects / mirror)
+[*][CODE]/aase new <name>[/CODE], [CODE]/aase addstand[/CODE], [CODE]/aase adddisplay <item|block|text>[/CODE] — build a scene
+[*][CODE]/aase equip[/CODE] — equipment menu
+[*][CODE]/aase particle add <type>[/CODE] — attach particle effects
+[*][CODE]/aase anim key/length/loop/play/stop/clear[/CODE] — keyframe animation
+[*][CODE]/aase save[/CODE], [CODE]/aase load <name>[/CODE], [CODE]/aase list[/CODE], [CODE]/aase edit[/CODE] — save / place / list / continue editing
+[*][CODE]/aase share[/CODE], [CODE]/aase import <code>[/CODE] — share codes
+[*][CODE]/aase export command[/CODE], [CODE]/aase export function[/CODE] — export a summon command or mcfunction datapack (admin/builder-only by default)
+[/LIST]
+Full command & permission reference: see the Wiki linked below.
+
+[SIZE=5][B]🔒 Permissions[/B][/SIZE]
+Granted to every player by default: [CODE]aase.use[/CODE], [CODE]aase.create.armorstand[/CODE], [CODE]aase.create.display[/CODE], [CODE]aase.scene.save[/CODE], [CODE]aase.scene.share[/CODE], [CODE]aase.animate[/CODE].
+Admin/builder-only by default (these write server files or shared data): [CODE]aase.export.command[/CODE], [CODE]aase.preset.save[/CODE], [CODE]aase.admin[/CODE], [CODE]aase.bypass.region[/CODE], [CODE]aase.bypass.limit[/CODE].
+
+[SIZE=5][B]📖 Documentation & links[/B][/SIZE]
+[LIST]
+[*]Full manual (English & 繁體中文), with diagrams: [I]see the project Wiki — link in the resource's "Source Code" / links panel[/I]
+[*]Source code & issue tracker: [I]see the resource's "Source Code" link[/I]
+[/LIST]
+
+[SIZE=5][B]📄 License[/B][/SIZE]
+GNU AGPL-3.0. Free to use, including on commercial servers. If you distribute a modified jar or its source to anyone — including running it as a network service others interact with — you must release that modified source under the same license. Simply running it (even for profit) never triggers this.
+
+[SIZE=5][B]❓ FAQ[/B][/SIZE]
+[SPOILER="I don't want to learn angles — can I still use this?"]Yes. [CODE]/aase presets[/CODE] is built for exactly that: pick a pose, click, done.[/SPOILER]
+[SPOILER="Does this need Paper?"]No. It only uses the Bukkit/Spigot API, so it runs on plain Spigot too.[/SPOILER]
+[SPOILER="Will this crash without other plugins installed?"]No hard dependencies at all. Region-plugin integration and an optional audit-log hook activate automatically only if those plugins are present.[/SPOILER]
+[SPOILER="Can players grief each other's builds?"]No — every element is ownership-tagged; only its creator can edit or remove it, and per-player/per-chunk/global caps stop spam.[/SPOILER]
