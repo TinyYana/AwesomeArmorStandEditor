@@ -45,6 +45,13 @@ class EntityRegistry(private val keys: AaseKeys) {
     fun isOurs(entity: Entity): Boolean =
         entity.persistentDataContainer.has(keys.owner, PersistentDataType.STRING)
 
+    /**
+     * Emitter markers are ours too, but they are not editable elements: their emitter id shares
+     * numbers with element localIds, so anything resolving a Tag to a scene element must skip them.
+     */
+    fun isEmitterMarker(entity: Entity): Boolean =
+        entity.persistentDataContainer.has(keys.emitter, PersistentDataType.STRING)
+
     fun forget(uuid: UUID) {
         byUuid.remove(uuid)
     }

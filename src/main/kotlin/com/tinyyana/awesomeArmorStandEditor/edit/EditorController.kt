@@ -192,9 +192,20 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
 
     fun openNew(player: Player, name: String) {
         val scene = Scene(id = UUID.randomUUID().toString(), owner = player.uniqueId.toString(), name = name)
-        val session = plugin.sessions.open(player.uniqueId, scene)
+        val session = reopen(player, scene)
         session.origin = player.location.clone()
         plugin.texts.send(player, "scene.new", "name" to name)
+    }
+
+    /**
+     * Swap the player onto a new session. Playback bound to the old session must stop first —
+     * the scheduler task holds the old session in its closure, so dropping the session without
+     * stopping leaves an orphaned task posing the old entities forever.
+     */
+    private fun reopen(player: Player, scene: Scene): EditSession {
+        plugin.sessions.get(player.uniqueId)?.let { plugin.animation.stop(it) }
+        plugin.sessions.close(player.uniqueId)
+        return plugin.sessions.open(player.uniqueId, scene)
     }
 
     fun save(player: Player) = withSession(player) { s ->
@@ -214,8 +225,7 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
         if (!checkLimits(player, scene.elements.size)) return
         if (!checkRegion(player, scenePoints(scene, origin))) return
         if (!firePlace(player, scene, origin)) return plugin.texts.send(player, "share.place-cancelled")
-        plugin.sessions.get(player.uniqueId)?.let { plugin.sessions.close(player.uniqueId) }
-        val session = plugin.sessions.open(player.uniqueId, scene)
+        val session = reopen(player, scene)
         plugin.placement.placeAll(session, origin, player.uniqueId)
         // Fresh sessions start unselected; pick the first element so setequip/flag/pose
         // work right after load without hunting for the edit tool first.
@@ -231,8 +241,11 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
     /** Re-bind a session to already-placed art the player is standing near (no duplicate spawn). */
     fun editFromTarget(player: Player) {
         val range = plugin.settings.selectRange.toDouble()
+        // Emitter markers are ours too but must never be the target: their emitter id shares
+        // numbers with element localIds, so binding one would resolve to the wrong element and
+        // shift the reconstructed origin by the emitter's offset.
         val target = player.getNearbyEntities(range, range, range)
-            .filter { plugin.registry.isOurs(it) }
+            .filter { plugin.registry.isOurs(it) && !plugin.registry.isEmitterMarker(it) }
             .minByOrNull { it.location.distanceSquared(player.eyeLocation) }
             ?: return plugin.texts.send(player, "edit.no-target")
         val tag = plugin.registry.read(target) ?: return
@@ -242,12 +255,23 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
         val scene = plugin.store.load(tag.owner, tag.sceneId)
             ?: return plugin.texts.send(player, "edit.no-scene")
         val matched = scene.elements.find { it.localId == tag.localId } ?: return
-        val session = plugin.sessions.open(player.uniqueId, scene)
-        session.origin = target.location.clone().subtract(matched.offset.x, matched.offset.y, matched.offset.z)
+        val session = reopen(player, scene)
+        val origin = target.location.clone().subtract(matched.offset.x, matched.offset.y, matched.offset.z)
+        session.origin = origin
         val wide = range * 3
         for (e in player.getNearbyEntities(wide, wide, wide)) {
+            if (plugin.registry.isEmitterMarker(e)) continue
             val t = plugin.registry.read(e) ?: continue
-            if (t.sceneId == scene.id) session.entities[t.localId] = e
+            if (t.sceneId != scene.id) continue
+            val el = scene.elements.find { it.localId == t.localId } ?: continue
+            // Several placed copies share this scene id. Bind the copy the player targeted:
+            // per element, keep the entity closest to where this origin says it should stand —
+            // otherwise anim-stop's restore teleports some other copy's entity onto this one.
+            val expected = plugin.placement.elementLocation(origin, el)
+            val current = session.entities[t.localId]
+            if (current == null || e.location.distanceSquared(expected) < current.location.distanceSquared(expected)) {
+                session.entities[t.localId] = e
+            }
         }
         session.selectedLocalId = tag.localId
         session.mode = if (matched is ArmorStandElement) EditMode.POSE else EditMode.TRANSLATE
@@ -410,8 +434,7 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
         if (!checkLimits(player, scene.elements.size)) return
         if (!checkRegion(player, scenePoints(scene, origin))) return
         if (!firePlace(player, scene, origin)) return plugin.texts.send(player, "share.place-cancelled")
-        plugin.sessions.get(player.uniqueId)?.let { plugin.sessions.close(player.uniqueId) }
-        val session = plugin.sessions.open(player.uniqueId, scene)
+        val session = reopen(player, scene)
         plugin.placement.placeAll(session, origin, player.uniqueId)
         session.selectedLocalId = scene.elements.firstOrNull()?.localId
         for (emitter in scene.emitters) plugin.particles.spawnEmitter(origin, scene.id, player.uniqueId, emitter)
