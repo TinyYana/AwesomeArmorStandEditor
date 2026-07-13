@@ -240,7 +240,8 @@ Multiple elements with their own `key` calls animate together. For finer control
 - `/aase save` — saves to `scenes/<your-uuid>/<scene-id>.json`.
 - `/aase list` — your list of scenes.
 - `/aase load <name>` — places **a new copy** at your feet (you can place several). The first element is **auto-selected**, so `setequip`/`flag`/presets work right away.
-- `/aase edit` — stand next to an existing build to **re-bind** it as your session and keep editing (no duplicate is created).
+- `/aase edit` — stand next to an existing build to **re-bind** it as your session and keep editing (no duplicate is created). Note that it selects the element **nearest to you**; in a scene that mixes displays in, follow up with `/aase select` to pick the exact element.
+- `/aase select <element id|next|prev>` — **select a specific element** (ids show in tab-complete and `/aase info`; a leading `#` is fine). Displays have no hitbox for the tool to click, so this is the reliable way to move the selection in multi-element scenes; `next`/`prev` cycle through.
 - `/aase close` — ends the editing session (the build stays in the world).
 - `/aase info` — current scene info (element count, armor stands/displays, emitters, animation, selection, save state).
 - **Share code (recommended)**: `/aase share` → chat shows a **click-to-copy** share code (`AASE1:...`, a compressed scene); paste it to someone else, and their `/aase import <code> [new name]` places the same build at their feet (ownership becomes theirs, with a new id — your save is unaffected). Import is gated by the per-player element cap; an invalid code just reports "invalid," never an error.
@@ -359,6 +360,8 @@ All of the above take effect with `/aase reload`, no restart needed.
 **⚠ Admins: `/kill` goes straight through the protection.** Vanilla armor stands are removed outright by `BYPASSES_INVULNERABILITY` damage (`/kill`, the void) without firing `EntityDamageEvent`, so this plugin's listener never sees it. `/kill @e[type=armor_stand]` will wipe every build on the server, hand-placed vanilla stands included. Use `/aase clear` or `/aase admin remove|purge` — they only ever touch entities this plugin tagged.
 
 **Q: `load` after editing creates two copies?** `load` always places **a new copy**. To keep editing an existing build, use `/aase edit`.
+
+**Q: A scene has several armor stands and the second one won't take equipment?** `setequip` acts on the **currently selected** element, and `/aase edit` binds the entity **nearest to you** — when the scene mixes in displays (block/text/item), you think you selected the stand but actually got a display next to it, so you keep seeing "only armor stands wear equipment." Use `/aase select <id>` to pick that stand directly (tab-complete lists the ids), then `setequip`.
 
 **Q: The animation stops instead of running forever?** Live playback only runs during an editing session. For a persistent animation, `export function` and drive it with the datapack.
 

@@ -62,6 +62,10 @@ class AaseCommand(private val plugin: AwesomeArmorStandEditorPlugin) : TabExecut
                 if (name == null) deny(sender, "usage.load") else controller.loadFresh(sender, name)
             }
             "edit" -> require(sender, "aase.use") { controller.editFromTarget(sender) }
+            "select" -> require(sender, "aase.use") {
+                val arg = args.getOrNull(1)
+                if (arg == null) deny(sender, "usage.select") else controller.selectById(sender, arg)
+            }
             "list" -> require(sender, "aase.use") { listScenes(sender) }
             "info" -> require(sender, "aase.use") { controller.info(sender) }
             "equip" -> require(sender, "aase.use") { plugin.equipmentMenu.open(sender) }
@@ -190,7 +194,7 @@ class AaseCommand(private val plugin: AwesomeArmorStandEditorPlugin) : TabExecut
 
     private val subcommands = listOf(
         "guide", "tool", "new", "presets", "pose", "fx", "mirror", "addstand", "adddisplay", "setblock", "settext",
-        "setitem", "setname", "setequip", "equip", "flag", "particle", "anim", "save", "load", "edit", "list", "info",
+        "setitem", "setname", "setequip", "equip", "flag", "particle", "anim", "save", "load", "edit", "select", "list", "info",
         "delete", "export", "share", "import", "close", "clear", "admin", "reload",
     )
 
@@ -218,6 +222,11 @@ class AaseCommand(private val plugin: AwesomeArmorStandEditorPlugin) : TabExecut
                 "pose" -> (listOf("save") + plugin.presets.poses.map { it.id }).filter { it.startsWith(args[1].lowercase()) }
                 "fx" -> plugin.presets.fx.map { it.id }.filter { it.startsWith(args[1].lowercase()) }
                 "load" -> if (sender is Player) plugin.store.list(sender.uniqueId).map { it.name }.filter { it.startsWith(args[1]) } else emptyList()
+                "select" -> {
+                    val ids = (sender as? Player)?.let { plugin.sessions.get(it.uniqueId) }
+                        ?.scene?.elements?.map { it.localId.toString() } ?: emptyList()
+                    (listOf("next", "prev") + ids).filter { it.startsWith(args[1].lowercase()) }
+                }
                 "clear" -> listOf("8", "16", "32").filter { it.startsWith(args[1]) }
                 else -> emptyList()
             }

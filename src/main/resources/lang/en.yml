@@ -23,6 +23,7 @@ usage:
   pose: "<gray>Usage: <aqua>/aase pose <preset id></aqua> to apply, or <aqua>/aase pose save <id> [name]</aqua> to save your own"
   fx: "<gray>Usage: <aqua>/aase fx <effect id></aqua> (see the list with <aqua>/aase presets</aqua>)"
   import: "<gray>Usage: <aqua>/aase import <share code> [new name]</aqua> (get a code with <aqua>/aase share</aqua>)"
+  select: "<gray>Usage: <aqua>/aase select <element id|next|prev>"
   admin: "<gray>Usage: <aqua>/aase admin <whois|remove|purge <radius> [player]|confirm>"
   clear: "<gray>Usage: <aqua>/aase clear <radius></aqua> (removes other people's elements where you may build)"
 
@@ -65,6 +66,8 @@ add:
 select:
   none: "<yellow>Right-click an element to select it first"
   other-scene: "<red>That element belongs to a different scene"
+  done: "<green>Selected <white>#{id}</white> ({type})"
+  bad-id: "<red>No such element id. This scene has: <white>{ids}"
 
 edit:
   begin: "<green>Now editing existing build <white>{name}"

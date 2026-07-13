@@ -91,6 +91,24 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
         return true
     }
 
+    /**
+     * Selects an element by localId or next/prev cycling. Displays have no hitbox to
+     * right-click and `/aase edit` binds whatever entity is nearest, so a scene mixing
+     * stands and displays needs a deterministic, distance-free way to move the selection.
+     */
+    fun selectById(player: Player, arg: String) = withSession(player) { s ->
+        val target = SelectOps.resolve(s.scene.elements.map { it.localId }, s.selectedLocalId, arg)
+            ?: return@withSession plugin.texts.send(
+                player, "select.bad-id",
+                "ids" to s.scene.elements.joinToString(", ") { "#" + it.localId },
+            )
+        val element = s.scene.elements.first { it.localId == target }
+        s.selectedLocalId = target
+        s.mode = if (element is ArmorStandElement) EditMode.POSE else EditMode.TRANSLATE
+        plugin.texts.send(player, "select.done", "id" to target.toString(), "type" to typeLabel(element))
+        readout(player, s)
+    }
+
     // --- adjustment ---
 
     fun adjust(player: Player, direction: Int) {

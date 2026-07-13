@@ -164,6 +164,17 @@ Paper 26.2 `runServer`,四次啟動,每次都 `AwesomeArmorStandEditor v1.0.0 en
 39. **稽核**:若伺服器有 LycoLib,`remove` / `purge` 應各寫一筆稽核紀錄(誰、清了誰的、幾個、座標)。沒有 LycoLib 時應安靜略過、不報錯。
 40. **未載入區塊**:把元件放在很遠的地方讓區塊卸載,回到出生點 `purge 64` → 那些元件**不會**被清掉(刻意:不掃描世界)。訊息會提醒「只會影響已載入區塊內的元件」。
 
+### 指定選取 `/aase select`(1.0.2 新增,玩家視角)
+
+背景:場景混有盔甲座與 display 時,`/aase edit` 綁「離眼睛最近的實體」可能抓到 display(display 也沒有碰撞箱,工具點不到),`setequip` 就一直回「只有盔甲座能穿裝備」。`select` 是不靠距離的替代路。
+
+41. 建一個混合場景(2 盔甲座 + 1 block display)→ `/aase select 2` → 回「已選取 #2(盔甲座)」,actionbar 讀數列跟著換;接 `setequip head`(副手拿物品)應穿在 #2 上。
+42. `#` 前綴也收:`/aase select #3` → 選到 display,模式自動切到移動(TRANSLATE)。
+43. `next`/`prev` 照場景順序輪且會繞圈:從最後一個 `next` 回到第一個,從第一個 `prev` 跳到最後一個。
+44. 壞編號:`/aase select 99`、`select abc` → 回「沒有這個元件編號」並列出場景現有編號,選取不變。
+45. tab 補全:`/aase select ` + Tab → 列出 `next`、`prev` 與目前場景的元件編號;沒開 session 時只列 `next`/`prev`。
+46. 沒 session 時 `/aase select 1` → 回「你還沒有進行中的場景」。
+
 ### 驗收層級標記
 
 回報測試時標明做到哪層:L1 build / L2 deployed(enable 無錯)/ L3 runtime(指令有回應)/ L4 玩家端(姿勢/存讀/匯出真的可見可用)。

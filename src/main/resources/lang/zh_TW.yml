@@ -23,6 +23,7 @@ usage:
   pose: "<gray>用法:<aqua>/aase pose <範本id></aqua> 套用,或 <aqua>/aase pose save <id> [名稱]</aqua> 存成自己的範本"
   fx: "<gray>用法:<aqua>/aase fx <特效id></aqua>(用 <aqua>/aase presets</aqua> 看清單)"
   import: "<gray>用法:<aqua>/aase import <分享碼> [新名稱]</aqua>(分享碼用 <aqua>/aase share</aqua> 產生)"
+  select: "<gray>用法:<aqua>/aase select <元件編號|next|prev>"
   admin: "<gray>用法:<aqua>/aase admin <whois|remove|purge <半徑> [玩家]|confirm>"
   clear: "<gray>用法:<aqua>/aase clear <半徑></aqua>(清掉別人放在你有建築權的地方的元件)"
 
@@ -65,6 +66,8 @@ add:
 select:
   none: "<yellow>先右鍵點擊一個元件來選取"
   other-scene: "<red>那個元件屬於別的場景"
+  done: "<green>已選取 <white>#{id}</white>({type})"
+  bad-id: "<red>沒有這個元件編號,場景裡有:<white>{ids}"
 
 edit:
   begin: "<green>正在編輯既有作品 <white>{name}"

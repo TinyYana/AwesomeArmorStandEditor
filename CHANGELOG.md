@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-07-13
+
+### Added(新增)
+
+- **`/aase select <元件編號|next|prev>`——不靠距離、不用工具的元件選取。** 之前換選取只有兩條路:拿編輯工具右鍵點實體(Display 沒有碰撞箱,點不到),或 `/aase edit` 綁「離你最近」的實體——場景裡一旦混了懸浮在眼睛高度的 display,站到盔甲座前面 `/aase edit` 抓到的永遠是旁邊的 display,`setequip` 就一直吃「只有盔甲座能穿裝備」(實測:2026-07-13 Yana 的雙人場景,第二個盔甲座怎麼樣都穿不上裝備)。現在 `load`/`edit` 之後直接 `/aase select 2` 或 `select next` 逐個切換;tab 補全會列出場景裡現有的元件編號,編號帶不帶 `#` 都收。選取回覆會說選到了什麼(`已選取 #2(盔甲座)`)。新增 lang key `usage.select`、`select.done`、`select.bad-id`(兩份語言檔)。
+
 ## [1.0.1] - 2026-07-11
 
 ### Fixed(修正)
