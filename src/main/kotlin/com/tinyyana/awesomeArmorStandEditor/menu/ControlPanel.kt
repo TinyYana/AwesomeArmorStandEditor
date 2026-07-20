@@ -191,7 +191,11 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
         inv.setItem(SLOT_SAVE, icon(Material.WRITABLE_BOOK, "panel.save"))
         // Export writes to the server folder — only show the button to those allowed to use it.
         if (player.hasPermission("aase.export.command")) inv.setItem(SLOT_EXPORT, icon(Material.COMMAND_BLOCK, "panel.export"))
-        inv.setItem(SLOT_DELETE, icon(Material.BARRIER, "panel.delete"))
+        // Delete and close must not share an icon. They used to both be BARRIER, in the same
+        // bottom row — the only thing telling them apart was the hover text, and the one you
+        // misread destroys the player's work. LAVA_BUCKET is what the delete confirmation
+        // dialog below already uses for "確定刪除", so the two now read as the same action.
+        inv.setItem(SLOT_DELETE, icon(Material.LAVA_BUCKET, "panel.delete"))
         inv.setItem(SLOT_CLOSE, icon(Material.BARRIER, "panel.close"))
     }
 
@@ -256,8 +260,14 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
         private const val SLOT_EQUIP = 44
         private const val SLOT_PRESETS = 51
         private const val SLOT_SAVE = 45
-        private const val SLOT_EXPORT = 47
-        private const val SLOT_DELETE = 49
+
+        // Slot 49 is the inert page-number indicator on every paged screen (PageWindow, and
+        // LycoLib's NavigationSlots for the rest of the server's menus). A player who has
+        // learned that slot 49 does nothing must not find "delete my work" there. Delete and
+        // export are swapped from their original positions for exactly that reason: export is
+        // permission-gated and harmless, so it is the safe thing to sit in the muscle-memory slot.
+        private const val SLOT_EXPORT = 49
+        private const val SLOT_DELETE = 47
         private const val SLOT_CLOSE = 53
 
         private const val CONFIRM_CANCEL = 10
