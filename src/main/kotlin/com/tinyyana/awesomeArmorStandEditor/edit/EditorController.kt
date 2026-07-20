@@ -197,11 +197,19 @@ class EditorController(private val plugin: AwesomeArmorStandEditorPlugin) {
         readout(player, s)
     }
 
-    fun deleteSelected(player: Player) = withSession(player) { s ->
-        val element = s.selected() ?: return@withSession plugin.texts.send(player, "select.none")
+    fun deleteSelected(player: Player) {
+        val elementId = plugin.sessions.get(player.uniqueId)?.selectedLocalId
+            ?: return plugin.texts.send(player, "select.none")
+        deleteElement(player, elementId)
+    }
+
+    /** Deletes the exact element the confirmation screen named, never whatever became selected later. */
+    fun deleteElement(player: Player, localId: Int) = withSession(player) { s ->
+        val element = s.scene.elements.firstOrNull { it.localId == localId }
+            ?: return@withSession plugin.texts.send(player, "delete.changed")
         plugin.placement.despawn(s, element.localId)
         s.scene.elements.removeIf { it.localId == element.localId }
-        s.selectedLocalId = null
+        if (s.selectedLocalId == element.localId) s.selectedLocalId = null
         s.dirty = true
         plugin.texts.send(player, "delete.ok", "id" to element.localId.toString())
     }

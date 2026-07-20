@@ -80,7 +80,7 @@ class EquipmentMenu(private val plugin: AwesomeArmorStandEditorPlugin) : Listene
     private fun populate(player: Player, inv: Inventory) {
         inv.clear()
         val snapshot = controller.equipmentSnapshot(player) ?: return
-        inv.setItem(SLOT_INFO, icon(Material.ARMOR_STAND, texts.legacy("equip-menu.info")))
+        inv.setItem(SLOT_INFO, icon(Material.ARMOR_STAND, texts.legacy("equip-menu.info"), listOf(texts.legacy("equip-menu.info-lore-1"), texts.legacy("equip-menu.info-lore-2"))))
         for ((slot, key) in SLOTS) {
             val encoded = snapshot[key]
             inv.setItem(slot, slotItem(key, encoded))
@@ -114,10 +114,11 @@ class EquipmentMenu(private val plugin: AwesomeArmorStandEditorPlugin) : Listene
     }
 
     @Suppress("DEPRECATION")
-    private fun icon(material: Material, nameLegacy: String): ItemStack {
+    private fun icon(material: Material, nameLegacy: String, lore: List<String> = emptyList()): ItemStack {
         val item = ItemStack(material)
         val meta = item.itemMeta ?: return item
         meta.setDisplayName(nameLegacy)
+        if (lore.isNotEmpty()) meta.lore = lore
         item.itemMeta = meta
         return item
     }

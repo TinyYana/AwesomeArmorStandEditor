@@ -26,13 +26,15 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
     private val texts get() = plugin.texts
     private val controller get() = plugin.controller
 
-    private class Holder : InventoryHolder {
+    private sealed class Holder : InventoryHolder {
         lateinit var inv: Inventory
         override fun getInventory(): Inventory = inv
     }
+    private class PanelHolder : Holder()
+    private class DeleteHolder(val localId: Int) : Holder()
 
     fun open(player: Player) {
-        val holder = Holder()
+        val holder = PanelHolder()
         val inv = Bukkit.createInventory(holder, 54, texts.legacy("panel.title"))
         holder.inv = inv
         populate(player, inv)
@@ -46,6 +48,18 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
         event.isCancelled = true
         val player = event.whoClicked as? Player ?: return
         if (event.clickedInventory !== event.inventory) return
+
+        if (holder is DeleteHolder) {
+            when (event.rawSlot) {
+                CONFIRM_CANCEL, CONFIRM_BACK -> open(player)
+                CONFIRM_DELETE -> {
+                    controller.deleteElement(player, holder.localId)
+                    open(player)
+                }
+                CONFIRM_CLOSE -> player.closeInventory()
+            }
+            return
+        }
 
         when (event.rawSlot) {
             // The GUI must enforce the same permissions the command path does — a button that calls
@@ -80,7 +94,10 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
             SLOT_PRESETS -> { plugin.gallery.open(player); return }
             SLOT_SAVE -> guarded(player, "aase.scene.save") { controller.save(player) }
             SLOT_EXPORT -> guarded(player, "aase.export.command") { controller.exportCommands(player) }
-            SLOT_DELETE -> controller.deleteSelected(player)
+            SLOT_DELETE -> {
+                openDeleteConfirmation(player)
+                return
+            }
             SLOT_CLOSE -> { player.closeInventory(); return }
 
             in PART_SLOTS.keys -> setPart(player, PART_SLOTS.getValue(event.rawSlot))
@@ -89,6 +106,21 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
         }
         // Repopulate in place so highlights/values refresh.
         populate(player, event.inventory)
+    }
+
+    private fun openDeleteConfirmation(player: Player) {
+        val selected = plugin.sessions.get(player.uniqueId)?.selected()
+            ?: return texts.send(player, "select.none")
+        val holder = DeleteHolder(selected.localId)
+        val inv = Bukkit.createInventory(holder, 27, texts.legacy("panel.confirm-title"))
+        holder.inv = inv
+        val type = texts.label(if (selected is ArmorStandElement) "label.armorstand" else "label.display")
+        inv.setItem(4, icon(Material.TNT, "panel.confirm-summary", "type" to type, "id" to selected.localId.toString()))
+        inv.setItem(CONFIRM_CANCEL, icon(Material.LIME_DYE, "panel.confirm-cancel"))
+        inv.setItem(CONFIRM_DELETE, icon(Material.LAVA_BUCKET, "panel.confirm-delete", "id" to selected.localId.toString()))
+        inv.setItem(CONFIRM_BACK, icon(Material.ARROW, "panel.confirm-back"))
+        inv.setItem(CONFIRM_CLOSE, icon(Material.BARRIER, "panel.close"))
+        player.openInventory(inv)
     }
 
     private inline fun guarded(player: Player, permission: String, block: () -> Unit) {
@@ -160,7 +192,7 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
         // Export writes to the server folder — only show the button to those allowed to use it.
         if (player.hasPermission("aase.export.command")) inv.setItem(SLOT_EXPORT, icon(Material.COMMAND_BLOCK, "panel.export"))
         inv.setItem(SLOT_DELETE, icon(Material.BARRIER, "panel.delete"))
-        inv.setItem(SLOT_CLOSE, icon(Material.RED_STAINED_GLASS_PANE, "panel.close"))
+        inv.setItem(SLOT_CLOSE, icon(Material.BARRIER, "panel.close"))
     }
 
     private fun ArmorStandElement.flagValue(flag: String) = when (flag) {
@@ -183,6 +215,7 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
         val item = ItemStack(material)
         val meta = item.itemMeta ?: return item
         meta.setDisplayName(texts.legacy(nameKey, *ph))
+        texts.raw("$nameKey-lore")?.let { meta.lore = listOf(texts.legacy("$nameKey-lore", *ph)) }
         item.itemMeta = meta
         return item
     }
@@ -193,6 +226,7 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
         val meta = item.itemMeta ?: return item
         val marker = if (on) "» " else ""
         meta.setDisplayName(marker + texts.legacy(nameKey))
+        texts.raw("$nameKey-lore")?.let { meta.lore = listOf(texts.legacy("$nameKey-lore")) }
         item.itemMeta = meta
         return item
     }
@@ -225,6 +259,11 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
         private const val SLOT_EXPORT = 47
         private const val SLOT_DELETE = 49
         private const val SLOT_CLOSE = 53
+
+        private const val CONFIRM_CANCEL = 10
+        private const val CONFIRM_DELETE = 16
+        private const val CONFIRM_BACK = 18
+        private const val CONFIRM_CLOSE = 22
 
         private val PART_SLOTS = mapOf(
             18 to BodyPart.HEAD, 19 to BodyPart.BODY, 20 to BodyPart.LEFT_ARM,
