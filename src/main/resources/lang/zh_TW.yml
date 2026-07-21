@@ -313,6 +313,8 @@ panel:
   save-lore: "<gray>把目前所有變更存起來，下次還能繼續編輯</gray>"
   export: "<aqua><bold>交給地圖作者使用</bold></aqua>"
   export-lore: "<gray>輸出召喚作品的指令；一般玩家不需要這個功能</gray>"
+  export-locked: "<gray>交給地圖作者使用(需要權限)</gray>"
+  export-locked-lore: "<gray>這顆需要 aase.export.command;一般玩家用不到,作品照樣能存</gray>"
   delete: "<red><bold>刪除選取的展示物</bold></red>"
   delete-lore: "<gray>會先顯示確認畫面，不會立刻刪除</gray>"
   close: "<gray>關閉"

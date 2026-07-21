@@ -44,36 +44,42 @@ class PresetGallery(private val plugin: AwesomeArmorStandEditorPlugin) : Listene
     fun open(player: Player, requestedPage: Int = 1) {
         val entries = plugin.presets.poses.map { Entry.Pose(it.id, it.icon, texts.presetName(it.id, it.name)) } +
             plugin.presets.fx.map { Entry.Fx(it.id, it.icon, texts.presetName(it.id, it.name)) }
-        val page = PageWindow.resolve(entries, requestedPage, LIST_CONTENT_SLOTS.size)
+        // Row 0 carries "what this list is" plus the mirror toggle, so the window keeps a header row.
+        val page = PageWindow.resolve(entries, requestedPage, header = true)
         val actions = mutableMapOf<Int, Action>()
         val holder = Holder(page.number, actions)
-        val inv = Bukkit.createInventory(holder, 54, texts.legacy("gallery.title"))
+        val inv = Bukkit.createInventory(holder, page.slotCount, texts.legacy("gallery.title"))
         holder.inv = inv
 
-        inv.setItem(SLOT_INFO, icon(Material.NAME_TAG, texts.legacy("gallery.info")))
+        inv.setItem(page.headerSlots[0], icon(Material.NAME_TAG, texts.legacy("gallery.info")))
+        inv.setItem(page.headerSlots[1], icon(Material.LEVER, texts.legacy("gallery.mirror")))
+        actions[page.headerSlots[1]] = Action.Mirror
+
         page.content.forEachIndexed { index, entry ->
-            val slot = LIST_CONTENT_SLOTS[index]
+            val slot = page.slots[index]
             val kind = texts.legacy(if (entry is Entry.Pose) "gallery.pose-kind" else "gallery.fx-kind")
             inv.setItem(slot, named(entry.icon, entry.name, listOf(kind, texts.legacy("gallery.apply-hint"))))
             actions[slot] = Action.Apply(entry)
         }
-        if (entries.isEmpty()) inv.setItem(22, icon(Material.OAK_SIGN, texts.legacy("gallery.empty")))
+        // Empty state goes in the first content slot, not the middle of the window.
+        if (entries.isEmpty()) inv.setItem(page.firstSlot, icon(Material.OAK_SIGN, texts.legacy("gallery.empty")))
 
-        inv.setItem(SLOT_SECONDARY, icon(Material.LEVER, texts.legacy("gallery.mirror")))
-        actions[SLOT_SECONDARY] = Action.Mirror
-        inv.setItem(SLOT_BACK, icon(Material.ARROW, texts.legacy("gallery.back")))
-        actions[SLOT_BACK] = Action.Back
-        inv.setItem(SLOT_HOME, icon(Material.NETHER_STAR, texts.legacy("gallery.home")))
-        actions[SLOT_HOME] = Action.Home
-        inv.setItem(SLOT_PREVIOUS, icon(if (page.hasPrevious) Material.ARROW else Material.GRAY_DYE, texts.legacy(if (page.hasPrevious) "gallery.previous" else "gallery.previous-disabled")))
-        if (page.hasPrevious) actions[SLOT_PREVIOUS] = Action.Page(page.number - 1)
-        inv.setItem(SLOT_PAGE, icon(Material.PAPER, texts.legacy("gallery.page", "page" to page.number.toString(), "pages" to page.totalPages.toString(), "count" to page.totalItems.toString())))
-        inv.setItem(SLOT_NEXT, icon(if (page.hasNext) Material.ARROW else Material.GRAY_DYE, texts.legacy(if (page.hasNext) "gallery.next" else "gallery.next-disabled")))
-        if (page.hasNext) actions[SLOT_NEXT] = Action.Page(page.number + 1)
-        inv.setItem(SLOT_HELP, icon(Material.KNOWLEDGE_BOOK, texts.legacy("gallery.help")))
-        actions[SLOT_HELP] = Action.Help
-        inv.setItem(SLOT_CLOSE, icon(Material.BARRIER, texts.legacy("gallery.close")))
-        actions[SLOT_CLOSE] = Action.Close
+        inv.setItem(page.backSlot, icon(Material.ARROW, texts.legacy("gallery.back")))
+        actions[page.backSlot] = Action.Back
+        inv.setItem(page.homeSlot, icon(Material.NETHER_STAR, texts.legacy("gallery.home")))
+        actions[page.homeSlot] = Action.Home
+        // No paging means no `‹ # ›` — those three slots stay empty rather than showing fake buttons.
+        if (page.paged) {
+            inv.setItem(page.previousSlot, icon(if (page.hasPrevious) Material.ARROW else Material.GRAY_DYE, texts.legacy(if (page.hasPrevious) "gallery.previous" else "gallery.previous-disabled")))
+            if (page.hasPrevious) actions[page.previousSlot] = Action.Page(page.number - 1)
+            inv.setItem(page.pageSlot, icon(Material.PAPER, texts.legacy("gallery.page", "page" to page.number.toString(), "pages" to page.totalPages.toString(), "count" to page.totalItems.toString())))
+            inv.setItem(page.nextSlot, icon(if (page.hasNext) Material.ARROW else Material.GRAY_DYE, texts.legacy(if (page.hasNext) "gallery.next" else "gallery.next-disabled")))
+            if (page.hasNext) actions[page.nextSlot] = Action.Page(page.number + 1)
+        }
+        inv.setItem(page.helpSlot, icon(Material.KNOWLEDGE_BOOK, texts.legacy("gallery.help")))
+        actions[page.helpSlot] = Action.Help
+        inv.setItem(page.closeSlot, icon(Material.BARRIER, texts.legacy("gallery.close")))
+        actions[page.closeSlot] = Action.Close
 
         player.openInventory(inv)
     }
@@ -129,10 +135,5 @@ class PresetGallery(private val plugin: AwesomeArmorStandEditorPlugin) : Listene
         meta.lore = lore
         item.itemMeta = meta
         return item
-    }
-
-    companion object {
-        private const val SLOT_INFO = 4
-        private const val SLOT_SECONDARY = 7
     }
 }

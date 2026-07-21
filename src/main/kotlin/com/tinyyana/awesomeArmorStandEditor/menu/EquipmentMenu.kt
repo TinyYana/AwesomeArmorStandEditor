@@ -36,7 +36,7 @@ class EquipmentMenu(private val plugin: AwesomeArmorStandEditorPlugin) : Listene
             return
         }
         val holder = Holder()
-        val inv = Bukkit.createInventory(holder, 27, texts.legacy("equip-menu.title"))
+        val inv = Bukkit.createInventory(holder, ROWS * 9, texts.legacy("equip-menu.title"))
         holder.inv = inv
         populate(player, inv)
         player.openInventory(inv)
@@ -123,14 +123,24 @@ class EquipmentMenu(private val plugin: AwesomeArmorStandEditorPlugin) : Listene
         return item
     }
 
-    companion object {
-        private const val SLOT_INFO = 4
-        private const val SLOT_BACK = 22
+    internal companion object {
+        const val ROWS = 3
+        private const val COLUMNS = 9
 
-        // head, chest, legs, feet, mainhand, offhand along the middle row.
-        private val SLOTS = linkedMapOf(
-            10 to "head", 11 to "chest", 12 to "legs",
-            13 to "feet", 14 to "mainhand", 15 to "offhand",
+        /** Row 0: what this screen is. First content slot, left-aligned — not floating in the middle. */
+        const val SLOT_INFO = 0
+
+        /** Row 1: head, chest, legs, feet, mainhand, offhand, contiguous from column 0. */
+        val SLOTS = linkedMapOf(
+            9 to "head", 10 to "chest", 11 to "legs",
+            12 to "feet", 13 to "mainhand", 14 to "offhand",
         )
+
+        /**
+         * `base + 0`. It used to be `base + 4` (22) — the slot that is an inert page-number
+         * indicator on every paged screen in the game, so "click there, nothing happens" and
+         * "click there, the screen changes" were the same slot depending on which menu you were in.
+         */
+        const val SLOT_BACK = (ROWS - 1) * COLUMNS
     }
 }

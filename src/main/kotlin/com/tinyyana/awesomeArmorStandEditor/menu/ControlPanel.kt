@@ -35,7 +35,7 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
 
     fun open(player: Player) {
         val holder = PanelHolder()
-        val inv = Bukkit.createInventory(holder, 54, texts.legacy("panel.title"))
+        val inv = Bukkit.createInventory(holder, PANEL_ROWS * COLUMNS, texts.legacy("panel.title"))
         holder.inv = inv
         populate(player, inv)
         player.openInventory(inv)
@@ -108,14 +108,19 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
         populate(player, event.inventory)
     }
 
+    /**
+     * Confirm screen: summary in the first content slot, then cancel and delete far apart with
+     * different icons *and* different colours. Cancel is on the left and the destructive one on
+     * the right, matching every other confirm screen on the server.
+     */
     private fun openDeleteConfirmation(player: Player) {
         val selected = plugin.sessions.get(player.uniqueId)?.selected()
             ?: return texts.send(player, "select.none")
         val holder = DeleteHolder(selected.localId)
-        val inv = Bukkit.createInventory(holder, 27, texts.legacy("panel.confirm-title"))
+        val inv = Bukkit.createInventory(holder, CONFIRM_ROWS * COLUMNS, texts.legacy("panel.confirm-title"))
         holder.inv = inv
         val type = texts.label(if (selected is ArmorStandElement) "label.armorstand" else "label.display")
-        inv.setItem(4, icon(Material.TNT, "panel.confirm-summary", "type" to type, "id" to selected.localId.toString()))
+        inv.setItem(CONFIRM_SUMMARY, icon(Material.TNT, "panel.confirm-summary", "type" to type, "id" to selected.localId.toString()))
         inv.setItem(CONFIRM_CANCEL, icon(Material.LIME_DYE, "panel.confirm-cancel"))
         inv.setItem(CONFIRM_DELETE, icon(Material.LAVA_BUCKET, "panel.confirm-delete", "id" to selected.localId.toString()))
         inv.setItem(CONFIRM_BACK, icon(Material.ARROW, "panel.confirm-back"))
@@ -189,8 +194,15 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
 
         inv.setItem(SLOT_PRESETS, icon(Material.PAINTING, "panel.presets"))
         inv.setItem(SLOT_SAVE, icon(Material.WRITABLE_BOOK, "panel.save"))
-        // Export writes to the server folder — only show the button to those allowed to use it.
-        if (player.hasPermission("aase.export.command")) inv.setItem(SLOT_EXPORT, icon(Material.COMMAND_BLOCK, "panel.export"))
+        // Export writes to the server folder. Players without the permission still see the cell,
+        // in the locked style with the reason — one "you cannot use this" look, and no hole in the
+        // middle of a left-aligned row. IRON_BARS, not GRAY_DYE: grey dye already means "this
+        // toggle is off" two rows up, and "off" and "you may not touch this" must not look alike.
+        inv.setItem(
+            SLOT_EXPORT,
+            if (player.hasPermission("aase.export.command")) icon(Material.COMMAND_BLOCK, "panel.export")
+            else icon(Material.IRON_BARS, "panel.export-locked"),
+        )
         // Delete and close must not share an icon. They used to both be BARRIER, in the same
         // bottom row — the only thing telling them apart was the hover text, and the one you
         // misread destroys the player's work. LAVA_BUCKET is what the delete confirmation
@@ -235,53 +247,101 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
         return item
     }
 
-    companion object {
-        private const val SLOT_INFO = 0
-        private const val SLOT_GUIDE = 8
-        private const val SLOT_ADD_STAND = 2
-        private const val SLOT_ADD_ITEM = 3
-        private const val SLOT_ADD_BLOCK = 4
-        private const val SLOT_ADD_TEXT = 5
+    /**
+     * Every slot on this screen, derived from the shared band rules instead of ~30 hand-picked
+     * numbers (`docs/ux/CHEST_UI_DESIGN_SYSTEM.md` §4): **one row is one group, the cells in a
+     * group are contiguous from column 0, and rows — not gaps inside a row — separate groups.**
+     *
+     * The old numbering was the "periodic table" layout this revamp exists to kill: modes started
+     * at column 0 but axes at column 0 of another row with a hole at 30 and 33, save/delete/export/
+     * presets/close were sprinkled across the *footer* row, and the top row read
+     * `info · add add add add · · guide`.
+     *
+     * Two things this fixes beyond looks:
+     * - **Nothing sits on `base + 4` (49) any more.** That slot is the inert page-number indicator
+     *   on every paged screen in the game, including this plugin's own preset gallery. A player who
+     *   has learned "slot 49 does nothing" must not find "delete my work" — or anything at all —
+     *   there. Delete now lives in the scene row with a distinct icon, and the footer row holds
+     *   only navigation.
+     * - Delete and close no longer share the bottom row, and never shared an icon.
+     */
+    internal companion object {
+        const val COLUMNS = 9
+        const val PANEL_ROWS = 6
+        const val CONFIRM_ROWS = 3
 
-        private const val SLOT_MODE_MOVE = 9
-        private const val SLOT_MODE_POSE = 10
-        private const val SLOT_MODE_TRANSLATE = 11
-        private const val SLOT_MODE_ROTATE = 12
-        private const val SLOT_MODE_SCALE = 13
+        private fun row(index: Int, count: Int): List<Int> = (0 until count).map { index * COLUMNS + it }
 
-        private const val SLOT_AXIS_X = 27
-        private const val SLOT_AXIS_Y = 28
-        private const val SLOT_AXIS_Z = 29
-        private const val SLOT_STEP_DOWN = 31
-        private const val SLOT_STEP_UP = 32
-        private const val SLOT_NUDGE_DOWN = 34
-        private const val SLOT_NUDGE_UP = 35
+        /** Row 0 — elements: the four "add" buttons plus the equipment sub-menu. */
+        private val ELEMENT = row(0, 5)
+        val SLOT_ADD_STAND = ELEMENT[0]
+        val SLOT_ADD_ITEM = ELEMENT[1]
+        val SLOT_ADD_BLOCK = ELEMENT[2]
+        val SLOT_ADD_TEXT = ELEMENT[3]
+        val SLOT_EQUIP = ELEMENT[4]
 
-        private const val SLOT_EQUIP = 44
-        private const val SLOT_PRESETS = 51
-        private const val SLOT_SAVE = 45
+        /** Row 1 — how to adjust: the five edit modes, then how far one click moves. */
+        private val ADJUST = row(1, 9)
+        val SLOT_MODE_MOVE = ADJUST[0]
+        val SLOT_MODE_POSE = ADJUST[1]
+        val SLOT_MODE_TRANSLATE = ADJUST[2]
+        val SLOT_MODE_ROTATE = ADJUST[3]
+        val SLOT_MODE_SCALE = ADJUST[4]
+        val SLOT_STEP_DOWN = ADJUST[5]
+        val SLOT_STEP_UP = ADJUST[6]
+        val SLOT_NUDGE_DOWN = ADJUST[7]
+        val SLOT_NUDGE_UP = ADJUST[8]
 
-        // Slot 49 is the inert page-number indicator on every paged screen (PageWindow, and
-        // LycoLib's NavigationSlots for the rest of the server's menus). A player who has
-        // learned that slot 49 does nothing must not find "delete my work" there. Delete and
-        // export are swapped from their original positions for exactly that reason: export is
-        // permission-gated and harmless, so it is the safe thing to sit in the muscle-memory slot.
-        private const val SLOT_EXPORT = 49
-        private const val SLOT_DELETE = 47
-        private const val SLOT_CLOSE = 53
+        /** Row 2 — what to adjust: the six body parts, then the three axes. */
+        private val TARGET = row(2, 9)
+        val SLOT_AXIS_X = TARGET[6]
+        val SLOT_AXIS_Y = TARGET[7]
+        val SLOT_AXIS_Z = TARGET[8]
 
-        private const val CONFIRM_CANCEL = 10
-        private const val CONFIRM_DELETE = 16
-        private const val CONFIRM_BACK = 18
-        private const val CONFIRM_CLOSE = 22
+        val PART_SLOTS: Map<Int, BodyPart> = listOf(
+            BodyPart.HEAD, BodyPart.BODY, BodyPart.LEFT_ARM,
+            BodyPart.RIGHT_ARM, BodyPart.LEFT_LEG, BodyPart.RIGHT_LEG,
+        ).withIndex().associate { (index, part) -> TARGET[index] to part }
 
-        private val PART_SLOTS = mapOf(
-            18 to BodyPart.HEAD, 19 to BodyPart.BODY, 20 to BodyPart.LEFT_ARM,
-            21 to BodyPart.RIGHT_ARM, 22 to BodyPart.LEFT_LEG, 23 to BodyPart.RIGHT_LEG,
-        )
-        private val FLAG_SLOTS = mapOf(
-            36 to "small", 37 to "invisible", 38 to "nobaseplate", 39 to "nogravity",
-            40 to "arms", 41 to "marker", 42 to "glowing",
-        )
+        /** Row 3 — appearance toggles: the seven armour-stand flags. */
+        val FLAG_SLOTS: Map<Int, String> = listOf(
+            "small", "invisible", "nobaseplate", "nogravity", "arms", "marker", "glowing",
+        ).withIndex().associate { (index, flag) -> row(3, 7)[index] to flag }
+
+        /**
+         * Row 4 — the scene: state card, presets, save, export, delete.
+         *
+         * Export keeps its cell even when the player lacks `aase.export.command`; it renders in the
+         * "locked" style with the reason instead of disappearing. A left-aligned group has no holes
+         * in it, so a vanishing button in the middle of a row would read as "something failed to
+         * load", and delete would silently shift under the cursor of anyone who had learned its
+         * position.
+         */
+        private val SCENE = row(4, 5)
+        val SLOT_INFO = SCENE[0]
+        val SLOT_PRESETS = SCENE[1]
+        val SLOT_SAVE = SCENE[2]
+        val SLOT_EXPORT = SCENE[3]
+        val SLOT_DELETE = SCENE[4]
+
+        /** Footer: `base = (rows - 1) * 9`, `?` at `base + 7` and `✕` at `base + 8`. */
+        private const val PANEL_FOOTER_BASE = (PANEL_ROWS - 1) * COLUMNS
+        const val SLOT_GUIDE = PANEL_FOOTER_BASE + 7
+        const val SLOT_CLOSE = PANEL_FOOTER_BASE + 8
+
+        private const val CONFIRM_FOOTER_BASE = (CONFIRM_ROWS - 1) * COLUMNS
+        const val CONFIRM_SUMMARY = 0
+        const val CONFIRM_CANCEL = 10
+        const val CONFIRM_DELETE = 16
+        const val CONFIRM_BACK = CONFIRM_FOOTER_BASE
+        /** `base + 8`, not `base + 4` — the middle of the footer is the page indicator everywhere else. */
+        const val CONFIRM_CLOSE = CONFIRM_FOOTER_BASE + 8
+
+        /** Every slot [populate] can write to, derived from the constants above so a test can check them. */
+        val PANEL_SLOTS: List<Int> =
+            ELEMENT + ADJUST + TARGET + FLAG_SLOTS.keys.sorted() + SCENE + listOf(SLOT_GUIDE, SLOT_CLOSE)
+
+        val CONFIRM_SLOTS: List<Int> =
+            listOf(CONFIRM_SUMMARY, CONFIRM_CANCEL, CONFIRM_DELETE, CONFIRM_BACK, CONFIRM_CLOSE)
     }
 }

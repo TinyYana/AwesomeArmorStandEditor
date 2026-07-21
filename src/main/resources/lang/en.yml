@@ -313,6 +313,8 @@ panel:
   save-lore: "<gray>Keep every current change so you can continue later</gray>"
   export: "<aqua><bold>For map makers</bold></aqua>"
   export-lore: "<gray>Export a summon command; most players do not need this</gray>"
+  export-locked: "<gray>Hand off to a map maker (needs permission)</gray>"
+  export-locked-lore: "<gray>Needs aase.export.command; normal players do not need it, and saving still works</gray>"
   delete: "<red><bold>Delete selected display</bold></red>"
   delete-lore: "<gray>Shows a confirmation screen before deleting anything</gray>"
   close: "<gray>Close"
