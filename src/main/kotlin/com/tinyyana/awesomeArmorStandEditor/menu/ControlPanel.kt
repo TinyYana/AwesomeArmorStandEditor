@@ -173,7 +173,7 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
 
         for ((slot, part) in PART_SLOTS) {
             val on = isStand && session?.part == part
-            inv.setItem(slot, toggleIcon(if (on) Material.LIME_DYE else Material.GRAY_DYE, "panel.part-${part.name.lowercase()}", on))
+            inv.setItem(slot, toggleIcon(partMaterial(part), "panel.part-${part.name.lowercase()}", on))
         }
 
         for ((axis, slot) in mapOf(Axis.X to SLOT_AXIS_X, Axis.Y to SLOT_AXIS_Y, Axis.Z to SLOT_AXIS_Z)) {
@@ -215,6 +215,23 @@ class ControlPanel(private val plugin: AwesomeArmorStandEditorPlugin) : Listener
         "small" -> flags.small; "invisible" -> flags.invisible; "nobaseplate" -> flags.noBasePlate
         "nogravity" -> flags.noGravity; "arms" -> flags.arms; "marker" -> flags.marker
         "glowing" -> flags.glowing; else -> false
+    }
+
+    /**
+     * The body-part row is a **radio group**, not six independent switches, so the material has to
+     * carry which part it is — the same rule [axisMaterial] already follows. It used to be
+     * LIME_DYE/GRAY_DYE like the flag row below, which rendered as six identical grey dots whenever
+     * nothing was selected (`docs/ux/evidence/screens-after/aase-panel.png`): the only thing telling
+     * them apart was hover text, and the whole point of a control panel is not having to hover.
+     * State stays on [toggleIcon]'s `»` marker plus the glint.
+     */
+    private fun partMaterial(part: BodyPart): Material = when (part) {
+        BodyPart.HEAD -> Material.IRON_HELMET
+        BodyPart.BODY -> Material.IRON_CHESTPLATE
+        BodyPart.LEFT_ARM -> Material.SHIELD
+        BodyPart.RIGHT_ARM -> Material.WOODEN_SWORD
+        BodyPart.LEFT_LEG -> Material.IRON_BOOTS
+        BodyPart.RIGHT_LEG -> Material.GOLDEN_BOOTS
     }
 
     private fun axisMaterial(axis: Axis, on: Boolean): Material = when (axis) {
